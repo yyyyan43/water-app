@@ -1,0 +1,5433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>情绪盲盒 · 星灵日常</title>
+<meta name="description" content="情绪盲盒 · 星灵日常 —— 记录情绪与喝水，在星灵和花园的陪伴下养成温柔的生活微习惯。">
+<meta name="theme-color" content="#080716">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="星灵日常">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<style>
+/* ============================================================
+   情绪盲盒 · 星灵日常  V1.2
+   样式总表
+   模块索引：
+   00 基础重置 / 变量
+   01 星云背景
+   02 顶栏（含今日饮水进度条）
+   03 主布局
+   04 舞台（星灵 / 情绪球坞 / 喝水悬浮钮 / 氛围模式）
+   05 侧栏（标签页 / 花园 / 收藏 / 饮水 / 星灵 / 数据）
+   06 弹窗通用
+   07 盲盒弹窗
+   08 喝水记录弹窗（含补记时间 / 连续饮水）
+   09 引导遮罩
+   10 进化提示卡片
+   11 分享卡片画布
+   12 浮动粒子 / 浮字
+   13 响应式
+   ============================================================ */
+
+/* ---------- 00 基础重置 / 变量 ---------- */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg-deep:#050510;
+  --panel:rgba(22,20,52,.72);
+  --panel-solid:#15132e;
+  --border:rgba(140,120,255,.20);
+  --border-strong:rgba(140,120,255,.38);
+  --text:#e8e6ff;
+  --muted:#9a95c8;
+  --muted-dim:#6f6a9e;
+  --accent:#7b6bff;
+  --accent-2:#4fc3f7;
+  --accent-3:#a78bfa;
+  --water:#7fe4ff;
+  --danger:#ff8fa8;
+  --pos:#7ee8d0;
+  --neg:#b39ddb;
+  --radius-l:24px;
+  --radius-m:16px;
+  --radius-s:12px;
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --ease-out:cubic-bezier(.34,1.4,.64,1);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --mobile-nav-h:calc(66px + var(--safe-bottom));
+}
+html,body{height:100%;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",sans-serif;
+  background:radial-gradient(circle at 20% 0%, #1a1038 0%, #07071a 55%, var(--bg-deep) 100%);
+  color:var(--text);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  transition:filter .6s ease;
+  overscroll-behavior:none;
+}
+body.ambient{
+  filter:saturate(.82) brightness(.92);
+}
+body.ambient #nebulaCanvas{opacity:1;}
+button{
+  font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;outline:none;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+button:focus-visible{
+  outline:2px solid var(--water);
+  outline-offset:2px;
+}
+input{font-family:inherit;outline:none;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:rgba(140,120,255,.35);border-radius:99px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(140,120,255,.55);}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* ---------- 01 星云背景 ---------- */
+#nebulaCanvas{
+  position:fixed;inset:0;width:100%;height:100%;
+  z-index:0;pointer-events:none;
+  transition:opacity .6s ease;
+}
+
+.app{
+  position:relative;z-index:1;
+  height:100vh;
+  height:100dvh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+
+/* ---------- 02 顶栏 ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:calc(13px + var(--safe-top)) 24px 13px;flex-shrink:0;
+  border-bottom:1px solid rgba(140,120,255,.14);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  background:rgba(10,9,28,.52);
+}
+
+.brand{cursor:pointer;border-radius:14px;}
+.brand:focus-visible{outline:2px solid var(--water);outline-offset:4px;}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;}
+.brand-mark{
+  width:42px;height:42px;border-radius:14px;
+  display:grid;place-items:center;font-size:22px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-shadow:0 6px 22px rgba(110,100,255,.5);
+  flex-shrink:0;
+  animation:brandBreath 4s ease-in-out infinite;
+}
+.brand-mark img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;}
+@keyframes brandBreath{
+  0%,100%{box-shadow:0 6px 22px rgba(110,100,255,.5);}
+  50%{box-shadow:0 6px 34px rgba(120,160,255,.8);}
+}
+.brand-text{min-width:0;}
+.brand-text h1{
+  font-size:16.5px;font-weight:700;letter-spacing:.4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.brand-text p{
+  font-size:10.5px;color:var(--muted);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.stats{display:flex;gap:7px;flex-shrink:0;align-items:stretch;}
+.stat{
+  position:relative;
+  min-width:78px;padding:6px 10px 7px;border-radius:14px;text-align:center;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(140,120,255,.16);
+  overflow:hidden;
+  transition:border-color .3s;
+}
+.stat b{
+  display:block;font-size:16.5px;line-height:1.2;
+  color:#b9b0ff;font-variant-numeric:tabular-nums;
+}
+.stat span{font-size:9.5px;color:var(--muted);white-space:nowrap;}
+
+/* 今日饮水统计：带背景进度填充 + 底部细条 */
+.stat.water{
+  border-color:rgba(100,200,255,.34);
+  background:rgba(79,195,247,.07);
+}
+.stat.water b{color:var(--water);}
+.stat.water .stat-fill{
+  position:absolute;left:0;bottom:0;height:100%;
+  background:linear-gradient(180deg,rgba(79,195,247,.18),rgba(79,195,247,.05));
+  z-index:0;pointer-events:none;
+  transition:width .8s var(--ease-out);
+}
+.stat.water .stat-inner{position:relative;z-index:1;}
+.stat.water .stat-bar{
+  position:absolute;left:0;bottom:0;height:2.5px;width:0%;
+  background:linear-gradient(90deg,var(--accent-2),var(--water));
+  z-index:2;
+  transition:width .8s var(--ease-out);
+  box-shadow:0 0 8px rgba(120,220,255,.8);
+}
+.stat.water.goal{
+  border-color:rgba(120,255,220,.7);
+  box-shadow:0 0 18px rgba(120,255,220,.3);
+}
+.stat.water.goal b{color:#a8ffe8;}
+
+/* ---------- 03 主布局 ---------- */
+.layout{
+  flex:1;min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 386px;
+  gap:16px;
+  padding:16px 20px 18px;
+}
+
+/* ---------- 04 舞台 ---------- */
+.stage{
+  position:relative;min-height:0;
+  display:flex;flex-direction:column;
+  border-radius:var(--radius-l);
+  overflow:hidden;
+  border:1px solid var(--border);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(120,90,255,.20), transparent 62%),
+    radial-gradient(circle at 12% 88%, rgba(80,200,255,.14), transparent 55%),
+    radial-gradient(circle at 88% 14%, rgba(255,120,200,.10), transparent 50%),
+    rgba(11,10,30,.62);
+}
+
+.stage-head{
+  position:absolute;top:18px;left:20px;z-index:3;
+  pointer-events:none;max-width:56%;
+}
+.spirit-name{
+  font-size:16px;font-weight:700;color:#cfc7ff;letter-spacing:.5px;
+  display:flex;align-items:center;gap:7px;
+  transition:color .4s;
+}
+.spirit-name .sn-tag{
+  font-size:9.5px;font-weight:600;
+  padding:2px 7px;border-radius:8px;
+  background:rgba(123,107,255,.25);
+  color:#c4baff;
+  letter-spacing:0;
+}
+.spirit-desc{
+  font-size:11.5px;color:var(--muted);
+  margin-top:5px;line-height:1.6;
+}
+
+/* 星灵当日进度小标签 */
+.today-chip{
+  position:absolute;top:18px;right:20px;z-index:4;
+  padding:6px 12px;border-radius:99px;
+  font-size:10.5px;font-weight:600;
+  background:rgba(79,195,247,.12);
+  border:1px solid rgba(100,200,255,.32);
+  color:#9fe8ff;
+  display:flex;align-items:center;gap:6px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  opacity:.9;
+  transition:all .4s;
+}
+.today-chip.done{
+  background:rgba(120,255,220,.14);
+  border-color:rgba(120,255,220,.5);
+  color:#a8ffe8;
+  box-shadow:0 0 18px rgba(120,255,220,.25);
+}
+.today-chip .tc-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:currentColor;
+  box-shadow:0 0 8px currentColor;
+  animation:dotBlink 2s ease-in-out infinite;
+}
+@keyframes dotBlink{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+.spirit-area{
+  flex:1;min-height:0;
+  display:grid;place-items:center;
+  position:relative;
+}
+
+/* --- 星灵本体 --- */
+.spirit{
+  position:relative;
+  width:260px;height:260px;
+  display:grid;place-items:center;
+  animation:float 5s ease-in-out infinite;
+  transition:filter .3s;
+  will-change:transform;
+}
+@keyframes float{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-14px);}
+}
+
+.spirit-aura{
+  position:absolute;inset:-10px;border-radius:50%;
+  background:radial-gradient(circle, var(--glow,rgba(150,120,255,.55)) 0%, transparent 66%);
+  filter:blur(10px);
+  animation:pulse 3.6s ease-in-out infinite;
+  transition:background .9s ease, filter .4s ease;
+}
+@keyframes pulse{
+  0%,100%{transform:scale(1);opacity:.8;}
+  50%{transform:scale(1.14);opacity:1;}
+}
+
+.spirit-ring{
+  position:absolute;width:230px;height:230px;border-radius:50%;
+  border:1px dashed rgba(160,140,255,.30);
+  animation:spin 26s linear infinite;
+}
+.spirit-ring::before{
+  content:'';position:absolute;top:-4px;left:50%;
+  width:8px;height:8px;border-radius:50%;
+  background:#a99bff;
+  box-shadow:0 0 14px #a99bff;
+  transform:translateX(-50%);
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.spirit-inner{
+  position:relative;width:158px;height:158px;
+  transition:transform .25s ease;
+}
+
+/* 饥饿（长时间未投喂）状态 */
+.spirit.hungry .spirit-inner{transform:scale(1.15);}
+.spirit.hungry .spirit-aura{
+  opacity:1;
+  filter:blur(16px) brightness(1.3);
+}
+
+/* 吞噬动画 */
+.spirit.eating .spirit-inner{animation:eating .62s var(--ease-spring);}
+@keyframes eating{
+  0%{transform:scale(1);}
+  30%{transform:scale(1.30,.84);}
+  60%{transform:scale(.92,1.10);}
+  100%{transform:scale(1);}
+}
+
+/* 喝水动画 */
+.spirit.drinking .spirit-inner{animation:drinking .9s ease;}
+@keyframes drinking{
+  0%{transform:scale(1);}
+  25%{transform:scale(.92,1.12) translateY(4px);}
+  50%{transform:scale(1.14,.92) translateY(-6px);}
+  75%{transform:scale(.96,1.05);}
+  100%{transform:scale(1);}
+}
+.spirit.drinking .spirit-aura{
+  background:radial-gradient(circle, rgba(100,220,255,.95) 0%, transparent 68%);
+  filter:blur(16px) brightness(1.35);
+}
+
+/* 进化过渡 */
+.spirit.evolving .spirit-inner{
+  animation:evolving 1.2s var(--ease-out);
+}
+@keyframes evolving{
+  0%{transform:scale(1);filter:brightness(1);}
+  35%{transform:scale(1.28);filter:brightness(1.8) blur(1px);}
+  70%{transform:scale(.94);filter:brightness(1.3);}
+  100%{transform:scale(1);filter:brightness(1);}
+}
+.spirit.evolving .spirit-aura{
+  animation:evolveAura 1.2s ease;
+}
+@keyframes evolveAura{
+  0%{opacity:.8;filter:blur(10px);}
+  45%{opacity:1;filter:blur(26px) brightness(2);}
+  100%{opacity:.8;filter:blur(10px);}
+}
+
+/* 星灵身体 */
+.spirit-body{
+  position:absolute;inset:0;
+  border-radius:50% 50% 46% 46%;
+  background:radial-gradient(circle at 34% 26%, var(--c1,#b8a8ff), var(--c2,#6b5bd6) 56%, var(--c3,#4a3a9e) 100%);
+  box-shadow:
+    0 0 60px var(--glow,rgba(150,120,255,.7)),
+    inset 0 -16px 34px rgba(0,0,0,.32),
+    inset 0 12px 26px rgba(255,255,255,.20);
+  transition:background .9s ease, box-shadow .9s ease;
+}
+
+/* 眼睛（基础形状） */
+.eye{
+  position:absolute;top:43%;
+  width:15px;height:18px;border-radius:50%;
+  background:#191330;
+  box-shadow:inset 0 -3px 0 rgba(255,255,255,.30);
+  animation:blink 5s infinite;
+  transition:height .4s ease, top .4s ease, border-radius .4s ease, width .4s ease;
+}
+.eye::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:5px;height:5px;border-radius:50%;
+  background:#fff;opacity:.95;
+}
+.eye-l{left:26%;}
+.eye-r{right:26%;}
+@keyframes blink{
+  0%,92%,100%{transform:scaleY(1);}
+  95%{transform:scaleY(.1);}
+}
+
+/* 眼型状态：满足（眯眼） */
+.spirit.mood-happy .eye{
+  height:9px;top:47%;
+  border-radius:9px 9px 50% 50%;
+  animation:none;
+}
+/* 眼型状态：低落（眼睑下垂） */
+.spirit.mood-low .eye{
+  height:14px;top:46%;
+  border-radius:50% 50% 50% 50%;
+  animation:blinkSlow 7s infinite;
+}
+@keyframes blinkSlow{
+  0%,94%,100%{transform:scaleY(1);}
+  97%{transform:scaleY(.15);}
+}
+/* 眼型状态：水润（喝水后） */
+.spirit.mood-water .eye{
+  height:20px;
+  box-shadow:
+    inset 0 -3px 0 rgba(255,255,255,.30),
+    0 0 12px rgba(150,240,255,.85);
+  animation:blinkWater 4s infinite;
+}
+@keyframes blinkWater{
+  0%,88%,100%{transform:scaleY(1);}
+  92%{transform:scaleY(.1);}
+}
+/* 眼型状态：饥饿（眼神下垂） */
+.spirit.mood-hungry .eye{
+  height:15px;top:45%;
+  border-radius:50% 50% 40% 40%;
+  animation:blinkSlow 8s infinite;
+}
+
+/* 腮红 */
+.cheek{
+  position:absolute;top:58%;
+  width:19px;height:10px;border-radius:50%;
+  background:rgba(255,140,180,.45);
+  filter:blur(2.5px);
+  transition:opacity .4s, background .4s;
+}
+.cheek-l{left:12%;}
+.cheek-r{right:12%;}
+.spirit.mood-happy .cheek{
+  background:rgba(255,150,180,.72);
+  width:23px;height:12px;
+}
+.spirit.mood-low .cheek{opacity:.35;}
+.spirit.mood-water .cheek{background:rgba(150,230,255,.55);}
+
+/* 嘴巴（基础） */
+.mouth{
+  position:absolute;left:50%;top:65%;
+  width:18px;height:9px;
+  transform:translateX(-50%);
+  border-bottom:3px solid #191330;
+  border-radius:0 0 60% 60%;
+  transition:all .4s ease;
+}
+/* 嘴巴状态：满足 */
+.spirit.mood-happy .mouth{
+  width:24px;height:11px;
+  border-bottom-width:3.5px;
+  border-radius:0 0 70% 70%;
+}
+/* 嘴巴状态：低落 */
+.spirit.mood-low .mouth{
+  top:67%;
+  width:16px;height:7px;
+  border-bottom-width:2.5px;
+  border-radius:0 0 40% 40%;
+  transform:translateX(-50%) rotate(0deg);
+}
+/* 嘴巴状态：水润 */
+.spirit.mood-water .mouth{
+  width:12px;height:12px;
+  border:2.5px solid #191330;
+  border-radius:50%;
+  background:rgba(150,230,255,.35);
+  border-bottom-width:2.5px;
+}
+/* 嘴巴状态：饥饿 */
+.spirit.mood-hungry .mouth{
+  width:14px;height:8px;
+  border-bottom-width:2.5px;
+}
+
+/* 尾巴 */
+.spirit-tail{
+  position:absolute;bottom:-6px;left:50%;
+  transform:translateX(-50%);
+  width:34px;height:16px;
+  border-radius:0 0 50% 50%;
+  background:linear-gradient(180deg,var(--c2),var(--c3));
+  filter:blur(.4px);
+  opacity:.9;
+  transition:background .9s ease, transform .4s ease;
+}
+.spirit.mood-low .spirit-tail{transform:translateX(-50%) scaleY(.7);}
+
+/* 星灵形态配色 */
+.spirit.form-star  {--c1:#b8a8ff;--c2:#6b5bd6;--c3:#4a3a9e;--glow:rgba(150,120,255,.70);}
+.spirit.form-light {--c1:#ffe7a8;--c2:#ffb86b;--c3:#d96b32;--glow:rgba(255,200,120,.78);}
+.spirit.form-mist  {--c1:#b3c2e0;--c2:#5c6b9e;--c3:#333d68;--glow:rgba(140,170,220,.68);}
+.spirit.form-water {--c1:#a8f0ff;--c2:#38b6d6;--c3:#15688f;--glow:rgba(100,220,255,.85);}
+
+/* 星灵气泡（喝水提醒 / 对话） */
+.spirit-bubble{
+  position:absolute;
+  top:-14px;left:50%;
+  transform:translate(-50%,-100%) scale(.8);
+  padding:10px 16px;
+  border-radius:16px 16px 16px 4px;
+  background:linear-gradient(145deg,rgba(60,52,120,.98),rgba(34,30,72,.98));
+  border:1px solid rgba(150,130,255,.5);
+  box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 24px rgba(110,90,255,.3);
+  font-size:12.5px;color:#e4e0ff;
+  white-space:nowrap;
+  opacity:0;visibility:hidden;
+  transition:all .4s var(--ease-spring);
+  pointer-events:none;
+  z-index:10;
+}
+.spirit-bubble.show{
+  opacity:1;visibility:visible;
+  transform:translate(-50%,-100%) scale(1);
+}
+.spirit-bubble::after{
+  content:'';position:absolute;bottom:-6px;left:20px;
+  width:12px;height:12px;
+  background:linear-gradient(145deg,rgba(60,52,120,.98),rgba(34,30,72,.98));
+  border-right:1px solid rgba(150,130,255,.5);
+  border-bottom:1px solid rgba(150,130,255,.5);
+  transform:rotate(45deg);
+  border-radius:0 0 3px 0;
+}
+
+/* 喝水悬浮按钮 */
+.water-fab{
+  position:absolute;right:24px;bottom:162px;z-index:6;
+  width:84px;height:84px;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  background:linear-gradient(140deg,var(--accent-2),#15688f);
+  box-shadow:0 10px 30px rgba(79,195,247,.5),inset 0 2px 12px rgba(255,255,255,.35);
+  color:#fff;
+  transition:transform .22s, box-shadow .22s;
+}
+.water-fab:hover{
+  transform:translateY(-4px) scale(1.05);
+  box-shadow:0 16px 40px rgba(79,195,247,.72);
+}
+.water-fab:active{transform:scale(.95);}
+.water-fab .wf-drop{
+  font-size:27px;line-height:1;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));
+}
+.water-fab .wf-text{font-size:11.5px;font-weight:700;letter-spacing:.5px;}
+.water-fab::before{
+  content:'';position:absolute;inset:-6px;border-radius:50%;
+  border:2px solid rgba(120,220,255,.6);
+  animation:fabPulse 2.4s ease-out infinite;
+}
+@keyframes fabPulse{
+  0%{transform:scale(.9);opacity:.9;}
+  100%{transform:scale(1.35);opacity:0;}
+}
+
+/* 情绪球坞 */
+.dock-wrap{
+  flex-shrink:0;
+  padding:6px 18px 18px;
+  border-top:1px solid rgba(140,120,255,.13);
+  background:linear-gradient(180deg,transparent,rgba(10,9,28,.6));
+}
+.dock-title{
+  text-align:center;font-size:11.5px;color:var(--muted);
+  margin-bottom:12px;letter-spacing:.5px;
+}
+.emotion-dock{
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+}
+.emotion-ball{
+  position:relative;
+  width:72px;height:72px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.16);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  color:#fff;font-size:11px;
+  touch-action:none;user-select:none;
+  transition:transform .2s,box-shadow .2s;
+}
+.emotion-ball:hover{transform:translateY(-5px) scale(1.06);box-shadow:0 10px 24px rgba(0,0,0,.4);}
+.emotion-ball:active{transform:scale(.95);}
+.emotion-ball.dragging{opacity:.35;transform:scale(.9);}
+.emotion-ball.selected{
+  box-shadow:0 0 0 3px #fff inset, 0 8px 26px rgba(0,0,0,.5);
+  transform:translateY(-5px) scale(1.05);
+}
+.emotion-ball .ball-emoji{
+  font-size:22px;line-height:1;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));
+}
+.emotion-ball .ball-name{font-size:10.5px;opacity:.92;}
+.emotion-ball .ball-count{
+  position:absolute;top:-3px;right:-3px;
+  min-width:18px;height:18px;padding:0 4px;
+  border-radius:9px;background:rgba(255,255,255,.9);color:#1a1533;
+  font-size:10px;font-weight:700;
+  display:grid;place-items:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+
+/* 多选投喂辅助栏 */
+.multi-bar{
+  display:none;
+  justify-content:center;gap:10px;margin-top:12px;
+  align-items:center;
+}
+.multi-bar.show{display:flex;}
+.multi-bar .mb-hint{
+  font-size:11px;color:var(--muted);
+}
+.multi-bar .btn{padding:7px 18px;font-size:12px;}
+
+.drag-ghost{
+  position:fixed;width:68px;height:68px;border-radius:50%;
+  margin-left:-34px;margin-top:-34px;
+  display:grid;place-items:center;font-size:30px;
+  pointer-events:none;z-index:99999;
+  background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.35), rgba(255,255,255,.05) 72%);
+  border:1px solid rgba(255,255,255,.45);
+  box-shadow:0 0 34px var(--c,rgba(150,120,255,.9));
+  transition:transform .1s;
+}
+
+/* ---------- 05 侧栏 ---------- */
+.side{
+  min-height:0;
+  display:flex;flex-direction:column;
+  border-radius:var(--radius-l);
+  overflow:hidden;
+  border:1px solid var(--border);
+  background:var(--panel);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+.tabs{
+  display:flex;flex-shrink:0;
+  padding:8px;gap:3px;
+  border-bottom:1px solid rgba(140,120,255,.14);
+}
+.tab{
+  flex:1;padding:9px 2px;border-radius:var(--radius-s);
+  font-size:11.5px;color:var(--muted);
+  transition:all .2s;white-space:nowrap;
+}
+.tab:hover{color:#cfc7ff;background:rgba(255,255,255,.05);}
+.tab.active{
+  color:#fff;
+  background:linear-gradient(135deg,rgba(123,107,255,.5),rgba(79,195,247,.35));
+  box-shadow:0 4px 16px rgba(110,100,255,.3);
+}
+.tab-body{
+  flex:1;min-height:0;
+  overflow-y:auto;
+  padding:18px;
+  -webkit-overflow-scrolling:touch;
+}
+.panel{display:none;}
+.panel.active{display:block;animation:fadeIn .28s ease;}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(6px);}
+  to{opacity:1;transform:none;}
+}
+.panel-title{
+  font-size:14px;font-weight:700;color:#cfc7ff;
+  margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;
+}
+.panel-sub{
+  font-size:11.5px;color:var(--muted);
+  line-height:1.7;margin-bottom:16px;
+}
+
+/* 花园 */
+.garden-wrap{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-bottom:14px;
+}
+.garden-cell{
+  position:relative;
+  aspect-ratio:1;
+  border-radius:12px;
+  background:rgba(255,255,255,.028);
+  border:1px dashed rgba(140,120,255,.18);
+  display:grid;place-items:center;
+  transition:all .2s;
+}
+.garden-cell.drag-over{
+  background:rgba(123,107,255,.16);
+  border-color:var(--accent);
+  border-style:solid;
+}
+.garden-cell .gc-empty{
+  font-size:14px;color:rgba(140,120,255,.28);
+  pointer-events:none;
+}
+.garden-item{
+  width:100%;height:100%;
+  border-radius:12px;
+  padding:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(140,120,255,.22);
+  cursor:grab;
+  user-select:none;
+  transition:transform .18s, box-shadow .18s;
+  position:relative;
+  overflow:hidden;
+}
+.garden-item:active{cursor:grabbing;}
+.garden-item:hover{
+  transform:scale(1.06);
+  box-shadow:0 6px 16px rgba(0,0,0,.4);
+  z-index:2;
+}
+.garden-item.rare{
+  background:linear-gradient(160deg,rgba(120,220,255,.22),rgba(255,190,120,.14));
+  border-color:rgba(160,230,255,.5);
+  box-shadow:0 0 14px rgba(120,220,255,.28);
+}
+.garden-item .gi-emoji{
+  font-size:20px;line-height:1;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));
+}
+.garden-item .gi-name{
+  font-size:8px;color:#cfc7ff;
+  margin-top:2px;line-height:1.2;
+  text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:100%;
+}
+.garden-item .gi-count{
+  position:absolute;top:2px;right:3px;
+  font-size:9px;font-weight:700;
+  color:var(--water);
+  text-shadow:0 1px 3px rgba(0,0,0,.7);
+}
+.garden-item.dragging{opacity:.35;}
+.garden-tip{
+  font-size:10.5px;color:var(--muted-dim);
+  line-height:1.7;text-align:center;
+  margin-top:10px;
+}
+.empty-tip{
+  grid-column:1/-1;
+  text-align:center;padding:36px 12px;
+  color:var(--muted);font-size:12px;line-height:2;
+}
+.empty-tip .big{font-size:38px;display:block;margin-bottom:10px;opacity:.55;}
+
+/* 待办盲盒队列（放在花园上方 / 星灵面板） */
+.todo-queue{
+  margin-bottom:16px;
+  border-radius:var(--radius-m);
+  padding:13px 14px;
+  background:linear-gradient(135deg,rgba(167,139,250,.14),rgba(79,195,247,.08));
+  border:1px solid rgba(167,139,250,.3);
+}
+.todo-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:9px;
+}
+.todo-head .th-title{
+  font-size:12.5px;font-weight:700;color:#d4c9ff;
+  display:flex;align-items:center;gap:6px;
+}
+.todo-head .th-count{
+  font-size:10px;padding:2px 8px;border-radius:8px;
+  background:rgba(167,139,250,.28);color:#d4c9ff;
+}
+.todo-list{display:flex;flex-direction:column;gap:7px;}
+.todo-item{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 11px;border-radius:11px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(140,120,255,.16);
+  font-size:11.5px;color:#ded9ff;
+  line-height:1.55;
+}
+.todo-item.expired{
+  opacity:.5;
+  border-color:rgba(255,120,140,.28);
+}
+.todo-item .ti-text{flex:1;min-width:0;}
+.todo-item .ti-tag{
+  font-size:9px;padding:1px 6px;border-radius:6px;
+  background:rgba(140,120,255,.2);color:#bfb4ff;
+  flex-shrink:0;
+}
+.todo-item .ti-del{
+  flex-shrink:0;width:22px;height:22px;border-radius:50%;
+  display:grid;place-items:center;
+  font-size:11px;color:var(--muted);
+  transition:all .2s;
+}
+.todo-item .ti-del:hover{background:rgba(255,90,120,.2);color:#ff9bb0;}
+.todo-empty{
+  font-size:10.5px;color:var(--muted-dim);
+  text-align:center;padding:6px 0;
+}
+
+/* 收藏馆 */
+.collection-list{display:flex;flex-direction:column;gap:10px;}
+.collect-card{
+  position:relative;
+  border-radius:var(--radius-m);
+  padding:13px 14px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(140,120,255,.18);
+  border-left:3px solid var(--accent);
+  animation:fadeIn .3s ease;
+}
+.collect-card.quote{border-left-color:var(--accent-2);}
+.collect-card.task{border-left-color:var(--accent-3);}
+.collect-tag{
+  display:inline-block;
+  font-size:9.5px;padding:2px 8px;border-radius:8px;
+  background:rgba(123,107,255,.22);color:#bfb4ff;
+  margin-bottom:7px;
+}
+.collect-card.quote .collect-tag{background:rgba(79,195,247,.2);color:#a5e4ff;}
+.collect-text{
+  font-size:12.5px;line-height:1.75;color:#ded9ff;
+  padding-right:56px;
+}
+.collect-time{font-size:10px;color:var(--muted);margin-top:8px;}
+.collect-ops{
+  position:absolute;top:11px;right:11px;
+  display:flex;gap:4px;
+}
+.collect-ops button{
+  width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;
+  font-size:12px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(140,120,255,.2);
+  transition:all .2s;
+}
+.collect-ops button:hover{background:rgba(255,255,255,.16);transform:scale(1.1);}
+.collect-ops button.faved{
+  background:rgba(255,200,100,.2);
+  border-color:rgba(255,200,100,.5);
+}
+.collect-card.faved{
+  border-left-color:#ffc864;
+  box-shadow:0 0 16px rgba(255,200,100,.15);
+}
+
+/* 饮水面板 */
+.water-ring-wrap{
+  display:grid;place-items:center;
+  margin-bottom:18px;
+}
+.water-ring{
+  width:148px;height:148px;border-radius:50%;
+  display:grid;place-items:center;position:relative;
+  box-shadow:0 0 32px rgba(79,195,247,.25);
+  transition:background .8s var(--ease-out);
+}
+.water-ring-hole{
+  width:118px;height:118px;border-radius:50%;
+  background:linear-gradient(160deg,#1b1840,#12102b);
+  display:grid;place-items:center;align-content:center;gap:1px;
+  box-shadow:inset 0 0 24px rgba(79,195,247,.18);
+}
+.wr-val{
+  font-size:28px;font-weight:800;color:#9fe8ff;line-height:1.1;
+  font-variant-numeric:tabular-nums;
+}
+.wr-unit{font-size:10.5px;color:var(--muted);}
+
+.water-actions{display:flex;gap:9px;margin-bottom:18px;}
+.water-actions .btn{flex:1;padding:11px 6px;font-size:12.5px;}
+
+.water-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:9px;margin-bottom:18px;
+}
+.wstat{
+  border-radius:14px;padding:11px 4px;text-align:center;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(140,120,255,.16);
+}
+.wstat b{
+  display:block;font-size:17px;color:#9fe8ff;
+  font-variant-numeric:tabular-nums;
+}
+.wstat span{font-size:10px;color:var(--muted);}
+
+.water-log-list{display:flex;flex-direction:column;gap:8px;}
+.wl-item{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 13px;border-radius:14px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(140,120,255,.16);
+  animation:fadeIn .3s ease;
+  position:relative;
+}
+.wl-emoji{font-size:22px;line-height:1;flex-shrink:0;}
+.wl-main{flex:1;min-width:0;}
+.wl-name{
+  font-size:12.5px;color:#e4e0ff;font-weight:600;
+  display:flex;align-items:center;gap:5px;
+  flex-wrap:wrap;
+}
+.wl-name .wl-badge{
+  font-size:8.5px;padding:1px 6px;border-radius:6px;
+  background:rgba(79,195,247,.2);color:#9fe8ff;
+  font-weight:500;
+}
+.wl-meta{font-size:10.5px;color:var(--muted);margin-top:3px;}
+.wl-ml{
+  font-size:13px;font-weight:800;color:var(--water);
+  flex-shrink:0;font-variant-numeric:tabular-nums;
+}
+.wl-menu-btn{
+  flex-shrink:0;
+  width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;
+  font-size:14px;color:var(--muted);
+  transition:all .2s;
+}
+.wl-menu-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+.wl-menu{
+  position:absolute;right:8px;top:calc(100% - 4px);
+  z-index:20;
+  min-width:106px;
+  border-radius:12px;overflow:hidden;
+  background:rgba(28,24,60,.98);
+  border:1px solid rgba(150,130,255,.38);
+  box-shadow:0 12px 34px rgba(0,0,0,.6);
+  display:none;
+  animation:fadeIn .16s ease;
+}
+.wl-menu.show{display:block;}
+.wl-menu button{
+  display:block;width:100%;
+  padding:9px 14px;text-align:left;
+  font-size:11.5px;color:#ded9ff;
+  transition:background .16s;
+}
+.wl-menu button:hover{background:rgba(255,255,255,.08);}
+.wl-menu button.del{color:#ff9bb0;}
+.wl-menu button.del:hover{background:rgba(255,90,120,.16);}
+
+/* 星灵档案 */
+.evo-form{
+  display:flex;gap:14px;align-items:center;
+  padding:16px;border-radius:18px;margin-bottom:16px;
+  background:linear-gradient(135deg,rgba(123,107,255,.18),rgba(79,195,247,.10));
+  border:1px solid rgba(140,120,255,.25);
+  transition:background .6s;
+}
+.evo-emoji{
+  font-size:38px;line-height:1;
+  filter:drop-shadow(0 0 12px rgba(150,120,255,.8));
+  transition:filter .6s;
+}
+.evo-name{font-size:15px;font-weight:700;color:#fff;}
+.evo-desc{font-size:11px;color:var(--muted);line-height:1.65;margin-top:5px;}
+
+.ratio-block{margin-bottom:16px;}
+.ratio-label{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:var(--muted);margin-bottom:7px;
+}
+.ratio-bar{
+  height:10px;border-radius:99px;overflow:hidden;
+  background:rgba(255,120,160,.35);
+}
+.ratio-pos{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  transition:width .6s var(--ease-out);
+}
+
+.mini-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:9px;margin-bottom:16px;
+}
+.mini{
+  border-radius:14px;padding:12px 6px;text-align:center;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(140,120,255,.16);
+}
+.mini b{
+  display:block;font-size:19px;color:#b9b0ff;
+  font-variant-numeric:tabular-nums;
+}
+.mini span{font-size:10px;color:var(--muted);}
+
+.emo-bars{display:flex;flex-direction:column;gap:8px;}
+.emo-bar-row{
+  display:flex;align-items:center;gap:9px;
+  font-size:11.5px;
+}
+.emo-bar-row .eb-name{
+  width:44px;color:#cfc7ff;flex-shrink:0;
+  display:flex;align-items:center;gap:2px;
+}
+.emo-bar-track{
+  flex:1;height:7px;border-radius:99px;
+  background:rgba(255,255,255,.07);overflow:hidden;
+}
+.emo-bar-fill{
+  height:100%;border-radius:99px;
+  transition:width .5s ease;
+}
+.emo-bar-row .eb-num{
+  width:22px;text-align:right;color:var(--muted);
+  font-variant-numeric:tabular-nums;flex-shrink:0;
+}
+
+/* 情绪日历 */
+.calendar-block{
+  margin-top:18px;padding-top:16px;
+  border-top:1px solid rgba(140,120,255,.14);
+}
+.cal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:11px;
+}
+.cal-title{font-size:12.5px;font-weight:700;color:#cfc7ff;}
+.cal-nav{display:flex;gap:5px;}
+.cal-nav button{
+  width:24px;height:24px;border-radius:8px;
+  display:grid;place-items:center;
+  font-size:11px;color:var(--muted);
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(140,120,255,.18);
+  transition:all .2s;
+}
+.cal-nav button:hover{background:rgba(255,255,255,.12);color:#fff;}
+.cal-week{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:3px;margin-bottom:4px;
+}
+.cal-week span{
+  text-align:center;font-size:9px;color:var(--muted-dim);
+  padding:3px 0;
+}
+.cal-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:3px;
+}
+.cal-cell{
+  aspect-ratio:1;
+  border-radius:7px;
+  display:grid;place-items:center;
+  font-size:9.5px;
+  color:var(--muted);
+  background:rgba(255,255,255,.025);
+  border:1px solid transparent;
+  transition:all .2s;
+  cursor:pointer;
+  position:relative;
+}
+.cal-cell.blank{visibility:hidden;cursor:default;}
+.cal-cell:hover{
+  border-color:rgba(140,120,255,.5);
+  transform:scale(1.08);
+  z-index:2;
+}
+.cal-cell.today{
+  border-color:var(--water);
+  box-shadow:0 0 8px rgba(120,220,255,.5);
+  color:#9fe8ff;
+}
+.cal-cell.has-data{color:#fff;font-weight:700;}
+.cal-cell.sel{
+  border-color:#fff;
+  box-shadow:0 0 0 2px rgba(255,255,255,.55);
+  transform:scale(1.1);
+  z-index:3;
+}
+.cal-legend{
+  display:flex;gap:10px;justify-content:center;
+  margin-top:10px;font-size:9px;color:var(--muted-dim);
+  flex-wrap:wrap;
+}
+.cal-legend .lg{display:flex;align-items:center;gap:3px;}
+.cal-legend .lg i{
+  width:8px;height:8px;border-radius:3px;
+  display:inline-block;
+}
+
+.cal-detail{
+  margin-top:12px;
+  padding:11px 13px;border-radius:12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(140,120,255,.16);
+  font-size:11px;color:var(--muted);
+  line-height:1.9;
+  min-height:54px;
+}
+.cal-detail b{color:#cfc7ff;}
+.cal-detail .cd-row{
+  display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;
+}
+.cal-detail .cd-chip{
+  font-size:10px;padding:1px 7px;border-radius:7px;
+  background:rgba(255,255,255,.06);
+}
+
+.evo-hint{
+  margin-top:16px;padding:12px 14px;border-radius:14px;
+  font-size:11px;line-height:1.9;
+  background:rgba(255,255,255,.035);
+  border:1px dashed rgba(140,120,255,.28);
+  color:var(--muted);
+}
+.evo-hint b{color:#bfb4ff;}
+
+/* 数据面板 */
+.data-actions{
+  display:flex;flex-direction:column;gap:9px;
+  margin-bottom:18px;
+}
+/* 隐私承诺卡片 */
+.privacy-card{
+  margin-top:18px;
+  border-radius:var(--radius-m);
+  padding:15px 16px;
+  background:linear-gradient(150deg,rgba(60,200,180,.10),rgba(79,195,247,.06));
+  border:1px solid rgba(100,220,200,.28);
+}
+.pc-head{
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;
+  user-select:none;
+}
+.pc-title{
+  font-size:12.5px;font-weight:700;color:#9fe8d0;
+  display:flex;align-items:center;gap:7px;
+}
+.pc-arrow{
+  font-size:11px;color:var(--muted);
+  transition:transform .3s;
+}
+.pc-arrow.open{transform:rotate(90deg);}
+.pc-body{
+  margin-top:11px;
+  font-size:11px;color:var(--muted);
+  line-height:2;
+  max-height:0;overflow:hidden;
+  transition:max-height .4s ease;
+}
+.pc-body.open{max-height:320px;}
+.pc-body ul{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.pc-body li{
+  display:flex;gap:7px;
+  padding-left:2px;
+}
+.pc-body li::before{
+  content:'✓';
+  color:#7ee8d0;
+  font-weight:700;
+  flex-shrink:0;
+}
+
+/* 页脚 */
+.side-footer{
+  flex-shrink:0;
+  padding:9px 18px;
+  border-top:1px solid rgba(140,120,255,.12);
+  font-size:9.5px;color:var(--muted-dim);
+  text-align:center;
+  letter-spacing:.2px;
+  line-height:1.5;
+}
+
+/* 开关 */
+.switch{
+  position:relative;
+  width:38px;height:21px;border-radius:99px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(140,120,255,.25);
+  transition:all .25s;
+  flex-shrink:0;
+}
+.switch::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:15px;height:15px;border-radius:50%;
+  background:#fff;
+  transition:transform .25s var(--ease-spring);
+  box-shadow:0 2px 5px rgba(0,0,0,.35);
+}
+.switch.on{
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  border-color:transparent;
+}
+.switch.on::after{transform:translateX(17px);}
+.switch:focus-visible{outline:2px solid var(--water);outline-offset:3px;}
+
+.setting-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+  padding:11px 0;
+  border-bottom:1px dashed rgba(140,120,255,.12);
+  font-size:11.5px;color:#ded9ff;
+}
+.setting-row:last-child{border-bottom:none;}
+.setting-row .sr-left{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.setting-row .sr-desc{font-size:10px;color:var(--muted-dim);}
+
+/* ---------- 06 弹窗通用 ---------- */
+.modal{
+  position:fixed;inset:0;z-index:9998;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  background:rgba(4,4,16,.78);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;
+  transition:opacity .28s,visibility .28s;
+}
+.modal.show{opacity:1;visibility:visible;}
+.modal-card{
+  position:relative;
+  width:100%;max-width:442px;
+  border-radius:26px;
+  padding:32px 26px 24px;
+  text-align:center;
+  background:linear-gradient(165deg,rgba(38,32,82,.98),rgba(16,14,40,.99));
+  border:1px solid rgba(150,130,255,.32);
+  box-shadow:0 30px 80px rgba(0,0,0,.65),0 0 60px rgba(110,90,255,.22);
+  transform:scale(.9) translateY(16px);
+  transition:transform .34s var(--ease-spring);
+  max-height:92vh;overflow-y:auto;
+}
+.modal.show .modal-card{transform:scale(1) translateY(0);}
+.modal-card.small{max-width:382px;}
+.modal-close{
+  position:absolute;top:14px;right:16px;
+  width:30px;height:30px;border-radius:50%;
+  color:var(--muted);font-size:14px;
+  display:grid;place-items:center;
+  transition:all .2s;
+  z-index:5;
+}
+.modal-close:hover{background:rgba(255,255,255,.1);color:#fff;}
+
+.modal-title{
+  font-size:19px;font-weight:700;color:#fff;
+  margin-bottom:8px;letter-spacing:.5px;
+}
+.modal-sub{
+  font-size:12px;color:var(--muted);
+  line-height:1.7;margin-bottom:16px;
+}
+.modal-actions{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+}
+
+/* ---------- 07 盲盒弹窗 ---------- */
+.box-stage{
+  display:grid;place-items:center;
+  margin-bottom:14px;height:86px;
+}
+.box-icon{
+  font-size:58px;line-height:1;
+  filter:drop-shadow(0 0 26px rgba(150,120,255,.9));
+  animation:boxFloat 2.4s ease-in-out infinite;
+}
+@keyframes boxFloat{
+  0%,100%{transform:translateY(0) rotate(-3deg);}
+  50%{transform:translateY(-10px) rotate(3deg);}
+}
+.box-icon.task{
+  animation:pop .5s var(--ease-spring);
+  filter:drop-shadow(0 0 24px rgba(167,139,250,.95));
+}
+.box-icon.quote{
+  animation:pop .5s var(--ease-spring);
+  filter:drop-shadow(0 0 24px rgba(79,195,247,.95));
+}
+.box-icon.rare{
+  animation:pop .6s var(--ease-spring), rareGlow 1.4s ease-in-out infinite .6s;
+  filter:drop-shadow(0 0 34px rgba(255,210,120,1));
+}
+@keyframes rareGlow{
+  0%,100%{filter:drop-shadow(0 0 34px rgba(255,210,120,1));}
+  50%{filter:drop-shadow(0 0 54px rgba(255,240,160,1));}
+}
+@keyframes pop{
+  0%{transform:scale(.4) rotate(-20deg);opacity:0;}
+  60%{transform:scale(1.2) rotate(6deg);opacity:1;}
+  100%{transform:scale(1) rotate(0);}
+}
+.box-body{margin-bottom:20px;}
+.box-text{
+  padding:18px;border-radius:16px;
+  font-size:15px;line-height:1.85;color:#e9e5ff;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(150,130,255,.26);
+  text-align:left;
+}
+.reward-title{
+  font-size:12.5px;color:var(--muted);
+  margin-bottom:12px;
+}
+.reward-list{display:flex;flex-direction:column;gap:9px;}
+.reward-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-radius:14px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(150,130,255,.24);
+  font-size:13.5px;color:#e9e5ff;
+  text-align:left;
+  animation:fadeIn .4s ease backwards;
+}
+.reward-item:nth-child(2){animation-delay:.08s;}
+.reward-item:nth-child(3){animation-delay:.16s;}
+.reward-item:nth-child(4){animation-delay:.24s;}
+.reward-item:nth-child(5){animation-delay:.32s;}
+.reward-item span{font-size:24px;line-height:1;}
+.reward-item.mark{
+  background:linear-gradient(135deg,rgba(79,195,247,.2),rgba(123,107,255,.16));
+  border-color:rgba(120,220,255,.5);
+}
+.reward-item.legend{
+  background:linear-gradient(135deg,rgba(255,210,120,.2),rgba(255,160,80,.12));
+  border-color:rgba(255,210,120,.6);
+  box-shadow:0 0 22px rgba(255,210,120,.25);
+}
+
+/* ---------- 08 喝水记录弹窗 ---------- */
+.water-section{margin-bottom:16px;text-align:left;}
+.ws-label{
+  font-size:12px;color:#cfc7ff;font-weight:600;
+  margin-bottom:9px;
+  display:flex;align-items:center;gap:6px;
+}
+.ws-label em{
+  font-style:normal;font-size:10.5px;
+  color:var(--muted);font-weight:400;
+}
+
+.drink-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+.drink-btn{
+  padding:10px 4px;border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  font-size:11px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(140,120,255,.2);
+  transition:all .2s;color:#cfc7ff;
+}
+.drink-btn:hover{background:rgba(255,255,255,.1);}
+.drink-btn .db-emoji{font-size:21px;line-height:1;}
+.drink-btn .db-emotion{
+  font-size:8.5px;color:var(--muted-dim);
+  margin-top:-1px;
+}
+.drink-btn.active{
+  background:linear-gradient(135deg,rgba(79,195,247,.34),rgba(123,107,255,.22));
+  border-color:rgba(120,220,255,.75);
+  box-shadow:0 0 16px rgba(100,200,255,.4);
+  color:#fff;
+  transform:translateY(-2px);
+}
+
+.ml-row{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:8px;margin-bottom:10px;
+}
+.ml-btn{
+  padding:10px 0;border-radius:12px;
+  font-size:12.5px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(140,120,255,.2);
+  transition:all .2s;color:#cfc7ff;
+}
+.ml-btn:hover{background:rgba(255,255,255,.1);}
+.ml-btn.active{
+  background:linear-gradient(135deg,rgba(79,195,247,.36),rgba(123,107,255,.24));
+  border-color:rgba(120,220,255,.75);
+  color:#fff;
+}
+.ml-custom{
+  display:flex;align-items:center;gap:9px;
+  justify-content:center;
+  margin-bottom:10px;
+}
+.ml-custom input{
+  width:118px;padding:10px 12px;
+  border-radius:12px;text-align:center;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(140,120,255,.28);
+  color:#fff;font-size:15px;font-weight:700;
+  font-variant-numeric:tabular-nums;
+  transition:border-color .25s, box-shadow .25s;
+}
+.ml-custom input:focus{
+  border-color:rgba(120,220,255,.75);
+  box-shadow:0 0 0 3px rgba(79,195,247,.16);
+}
+.ml-custom input.error{
+  border-color:rgba(255,120,140,.9);
+  box-shadow:0 0 0 3px rgba(255,90,120,.18);
+  animation:shake .4s ease;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  25%{transform:translateX(-6px);}
+  75%{transform:translateX(6px);}
+}
+.ml-custom span{font-size:12.5px;color:var(--muted);}
+
+/* 连续饮水开关行 */
+.continuous-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 13px;border-radius:12px;
+  background:rgba(79,195,247,.06);
+  border:1px solid rgba(100,200,255,.2);
+  margin-bottom:10px;
+}
+.continuous-row .cr-text{
+  flex:1;min-width:0;
+  font-size:11px;color:#cfc7ff;
+  line-height:1.6;
+}
+.continuous-row .cr-text em{
+  font-style:normal;color:var(--muted-dim);
+  font-size:10px;display:block;
+}
+
+/* 补记时间行 */
+.time-row{
+  display:flex;align-items:center;gap:10px;
+  margin-top:8px;
+}
+.time-row input[type="time"]{
+  flex:1;
+  padding:9px 12px;border-radius:12px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(140,120,255,.28);
+  color:#fff;font-size:13px;
+  font-variant-numeric:tabular-nums;
+}
+.time-row input[type="time"]::-webkit-calendar-picker-indicator{
+  filter:invert(.8);
+  cursor:pointer;
+}
+.time-row .tr-hint{
+  font-size:10px;color:var(--muted-dim);
+  flex-shrink:0;
+}
+
+.mood-row{
+  display:flex;flex-wrap:wrap;gap:7px;justify-content:center;
+}
+.mood-btn{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  font-size:9.5px;color:#fff;
+  border:1px solid rgba(255,255,255,.16);
+  transition:all .2s;
+}
+.mood-btn:hover{transform:translateY(-3px);}
+.mood-btn .mb-emoji{font-size:17px;line-height:1;}
+.mood-btn.active{
+  transform:scale(1.12);
+  box-shadow:0 0 0 2px #fff inset, 0 8px 20px rgba(0,0,0,.45);
+}
+.mood-suggest{
+  margin-top:9px;
+  font-size:10.5px;color:var(--muted-dim);
+  text-align:center;
+  line-height:1.6;
+  transition:color .3s;
+}
+.mood-suggest.highlight{color:#9fe8ff;}
+
+/* ---------- 09 引导遮罩 ---------- */
+.guide-overlay{
+  position:fixed;inset:0;z-index:99990;
+  background:rgba(3,3,12,.82);
+  backdrop-filter:blur(3px);
+  -webkit-backdrop-filter:blur(3px);
+  opacity:0;visibility:hidden;
+  transition:opacity .4s,visibility .4s;
+}
+.guide-overlay.show{opacity:1;visibility:visible;}
+.guide-highlight{
+  position:absolute;
+  border-radius:18px;
+  border:2px solid rgba(120,220,255,.85);
+  box-shadow:0 0 0 9999px rgba(3,3,12,.72),0 0 40px rgba(100,200,255,.6);
+  transition:all .45s var(--ease-out);
+  pointer-events:none;
+}
+.guide-card{
+  position:absolute;
+  width:min(340px,calc(100vw - 40px));
+  padding:20px 22px 18px;
+  border-radius:20px;
+  background:linear-gradient(160deg,rgba(44,38,94,.99),rgba(20,18,46,.99));
+  border:1px solid rgba(150,130,255,.42);
+  box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 40px rgba(110,90,255,.22);
+  transition:all .45s var(--ease-out);
+  z-index:99992;
+}
+.guide-step{
+  font-size:10px;font-weight:700;
+  letter-spacing:1px;
+  color:var(--water);
+  margin-bottom:8px;
+}
+.guide-title{
+  font-size:15.5px;font-weight:700;color:#fff;
+  margin-bottom:8px;
+}
+.guide-text{
+  font-size:12px;color:var(--muted);
+  line-height:1.85;margin-bottom:16px;
+}
+.guide-actions{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.guide-dots{display:flex;gap:5px;}
+.guide-dots i{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.2);
+  transition:all .25s;
+}
+.guide-dots i.on{
+  background:var(--water);
+  box-shadow:0 0 8px var(--water);
+  width:16px;border-radius:99px;
+}
+.guide-btns{display:flex;gap:7px;}
+.guide-btns .btn{padding:8px 16px;font-size:12px;}
+
+/* ---------- 10 进化提示卡片 ---------- */
+.evo-toast{
+  position:fixed;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(.82);
+  z-index:99995;
+  width:min(360px,calc(100vw - 40px));
+  padding:26px 24px 22px;
+  border-radius:24px;
+  text-align:center;
+  background:linear-gradient(160deg,rgba(50,42,110,.99),rgba(22,20,52,.99));
+  border:1px solid rgba(180,160,255,.55);
+  box-shadow:0 30px 80px rgba(0,0,0,.75),0 0 80px rgba(130,110,255,.4);
+  opacity:0;visibility:hidden;
+  transition:all .5s var(--ease-spring);
+  pointer-events:none;
+}
+.evo-toast.show{
+  opacity:1;visibility:visible;
+  transform:translate(-50%,-50%) scale(1);
+  pointer-events:auto;
+}
+.evo-toast .et-emoji{
+  font-size:56px;line-height:1;
+  filter:drop-shadow(0 0 28px rgba(180,160,255,1));
+  animation:etFloat 2.2s ease-in-out infinite;
+}
+@keyframes etFloat{
+  0%,100%{transform:translateY(0) scale(1);}
+  50%{transform:translateY(-8px) scale(1.06);}
+}
+.evo-toast .et-label{
+  font-size:10px;font-weight:700;
+  letter-spacing:2px;color:#c4baff;
+  margin:14px 0 7px;
+}
+.evo-toast .et-name{
+  font-size:20px;font-weight:800;color:#fff;
+  margin-bottom:8px;
+  text-shadow:0 0 24px rgba(160,140,255,.8);
+}
+.evo-toast .et-desc{
+  font-size:11.5px;color:var(--muted);
+  line-height:1.8;margin-bottom:18px;
+}
+.evo-toast .btn{width:100%;}
+
+/* ---------- 11 分享卡片画布 ---------- */
+.share-overlay{
+  position:fixed;inset:0;z-index:99997;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  background:rgba(4,4,16,.9);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  opacity:0;visibility:hidden;
+  transition:opacity .3s,visibility .3s;
+}
+.share-overlay.show{opacity:1;visibility:visible;}
+.share-box{
+  width:100%;max-width:420px;
+  text-align:center;
+  transform:scale(.92);
+  transition:transform .35s var(--ease-spring);
+}
+.share-overlay.show .share-box{transform:scale(1);}
+.share-canvas{
+  width:100%;max-width:320px;
+  border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.7),0 0 40px rgba(110,90,255,.25);
+  display:block;margin:0 auto 18px;
+  border:1px solid rgba(150,130,255,.35);
+}
+.share-actions{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+}
+
+/* ---------- 12 浮动粒子 / 浮字 ---------- */
+.particle{
+  position:fixed;
+  width:9px;height:9px;border-radius:50%;
+  margin-left:-4.5px;margin-top:-4.5px;
+  pointer-events:none;z-index:99999;
+  animation:burst .9s ease-out forwards;
+}
+@keyframes burst{
+  0%{transform:translate(0,0) scale(1);opacity:1;}
+  100%{transform:translate(var(--dx),var(--dy)) scale(.15);opacity:0;}
+}
+.float-text{
+  position:fixed;
+  transform:translate(-50%,-50%);
+  font-size:15px;font-weight:700;
+  pointer-events:none;z-index:99999;
+  text-shadow:0 0 18px currentColor;
+  animation:floatUp 1.4s ease-out forwards;
+  white-space:nowrap;
+}
+@keyframes floatUp{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.6);}
+  22%{opacity:1;transform:translate(-50%,-95%) scale(1.08);}
+  100%{opacity:0;transform:translate(-50%,-230%) scale(1);}
+}
+
+/* ---------- 移动端导航 ---------- */
+.sr-only{
+  position:absolute!important;width:1px!important;height:1px!important;
+  padding:0!important;margin:-1px!important;overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;
+}
+.mobile-nav{
+  display:none;flex-shrink:0;
+  min-height:var(--mobile-nav-h);
+  padding:6px 6px calc(6px + var(--safe-bottom));
+  background:rgba(10,9,28,.94);
+  border-top:1px solid rgba(140,120,255,.16);
+  box-shadow:0 -12px 36px rgba(0,0,0,.28);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  z-index:80;
+}
+.mobile-nav-btn{
+  appearance:none;position:relative;flex:1;min-width:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-height:52px;border-radius:14px;
+  color:var(--muted);font-size:9.5px;line-height:1.15;
+  transition:color .2s,background .2s,transform .2s;
+}
+.mobile-nav-btn .mn-icon{font-size:19px;line-height:1;filter:grayscale(.35);transition:transform .2s,filter .2s;}
+.mobile-nav-btn:active{transform:scale(.94);}
+.mobile-nav-btn.active{color:#fff;background:rgba(123,107,255,.14);}
+.mobile-nav-btn.active .mn-icon{filter:none;transform:translateY(-1px);}
+.mobile-nav-btn.active::after{
+  content:'';position:absolute;top:2px;width:18px;height:2px;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent),var(--water));
+  box-shadow:0 0 10px rgba(120,220,255,.7);
+}
+
+/* ---------- 13 响应式 ---------- */
+@media(max-width:1180px){
+  .layout{grid-template-columns:minmax(0,1fr) 340px;}
+  .spirit{width:214px;height:214px;}
+  .spirit-inner{width:134px;height:134px;}
+  .spirit-ring{width:192px;height:192px;}
+  .emotion-ball{width:65px;height:65px;}
+  .emotion-ball .ball-emoji{font-size:19px;}
+  .emotion-ball .ball-name{font-size:9.5px;}
+  .water-fab{width:74px;height:74px;bottom:146px;right:18px;}
+  .water-fab .wf-drop{font-size:24px;}
+  .water-fab .wf-text{font-size:10.5px;}
+  .stats{gap:5px;}
+  .stat{min-width:66px;padding:5px 7px;}
+  .stat b{font-size:14.5px;}
+  .stat span{font-size:9px;}
+}
+@media(max-width:920px){
+  body{overflow:hidden;}
+  .app{height:100dvh;min-height:0;overflow:hidden;}
+  .layout{
+    position:relative;
+    display:block;
+    flex:1;
+    min-height:0;
+    padding:8px;
+    overflow:hidden;
+  }
+  .stage{
+    position:absolute;inset:8px;min-height:0;
+    border-radius:22px;
+  }
+  .side{
+    display:none;
+    position:absolute;inset:0;
+    min-height:0;max-height:none;
+    border:0;border-radius:0;
+    background:linear-gradient(180deg,rgba(18,16,46,.97),rgba(9,8,26,.99));
+  }
+  .app.mobile-panel-open .stage{display:none;}
+  .app.mobile-panel-open .side{display:flex;animation:mobileScreenIn .24s ease both;}
+  @keyframes mobileScreenIn{
+    from{opacity:.35;transform:translateY(8px);}
+    to{opacity:1;transform:none;}
+  }
+  .side .tabs{display:none;}
+  .tab-body{padding:20px 16px 24px;overscroll-behavior:contain;}
+  .side-footer{display:none;}
+  .mobile-nav{display:flex;}
+  .brand-text p{display:none;}
+  .brand-text h1{font-size:14.5px;}
+  .brand-mark{width:38px;height:38px;border-radius:12px;font-size:20px;}
+  .water-fab{bottom:154px;right:14px;width:68px;height:68px;}
+  .spirit{width:198px;height:198px;}
+  .spirit-inner{width:122px;height:122px;}
+  .spirit-ring{width:176px;height:176px;}
+  .emotion-ball{width:58px;height:58px;}
+  .emotion-ball .ball-emoji{font-size:17px;}
+  .emotion-ball .ball-name{font-size:9px;}
+  .topbar{
+    display:grid;grid-template-columns:1fr;gap:8px;
+    padding:calc(8px + var(--safe-top)) 12px 8px;
+  }
+  .stats{width:100%;justify-content:space-between;}
+  .stat{flex:1;min-width:0;padding:5px 4px;}
+  .stat b{font-size:14px;}
+  .today-chip{top:auto;bottom:auto;right:14px;top:16px;font-size:9.5px;padding:4px 9px;}
+  .modal{align-items:flex-end;padding:0;}
+  .modal-card,
+  .modal-card.small{
+    max-width:none;max-height:calc(100dvh - 18px);
+    padding:28px 18px calc(20px + var(--safe-bottom));
+    border-radius:28px 28px 0 0;
+    transform:translateY(100%) scale(1);
+  }
+  .modal.show .modal-card{transform:translateY(0) scale(1);}
+}
+@media(max-width:560px){
+  .layout{padding:6px;}
+  .stage{inset:6px;min-height:0;border-radius:20px;}
+  .topbar{gap:7px;padding:calc(7px + var(--safe-top)) 10px 7px;}
+  .brand{gap:9px;}
+  .brand-mark{width:34px;height:34px;border-radius:11px;font-size:18px;}
+  .brand-text h1{font-size:13px;}
+  .stats{gap:4px;}
+  .stat{padding:4px 2px;border-radius:11px;}
+  .stat b{font-size:13px;}
+  .stat span{font-size:8px;letter-spacing:-.15px;}
+  .stage-head{top:14px;left:14px;max-width:60%;}
+  .today-chip{top:14px;right:12px;}
+  .spirit{width:172px;height:172px;}
+  .spirit-inner{width:108px;height:108px;}
+  .spirit-ring{width:154px;height:154px;}
+  .dock-wrap{padding:4px 8px 12px;}
+  .dock-title{
+    font-size:9.5px;line-height:1.45;margin-bottom:8px;
+    max-width:calc(100% - 70px);margin-left:auto;margin-right:auto;
+  }
+  .emotion-dock{gap:6px;}
+  .emotion-ball{width:50px;height:50px;}
+  .emotion-ball .ball-emoji{font-size:14px;}
+  .emotion-ball .ball-name{font-size:8px;}
+  .water-fab{width:58px;height:58px;bottom:138px;right:9px;}
+  .water-fab .wf-drop{font-size:21px;}
+  .water-fab .wf-text{font-size:9.5px;}
+  .spirit-name{font-size:13.5px;}
+  .spirit-desc{font-size:9.5px;line-height:1.5;}
+  .modal-card{padding:26px 18px 20px;}
+  .drink-grid{grid-template-columns:repeat(3,1fr);gap:6px;}
+  .drink-btn{font-size:9.5px;padding:8px 2px;}
+  .drink-btn .db-emoji{font-size:17px;}
+  .mood-btn{width:44px;height:44px;font-size:8px;}
+  .mood-btn .mb-emoji{font-size:14px;}
+  .garden-wrap{grid-template-columns:repeat(4,1fr);gap:6px;}
+  .tab-body{padding:18px 13px 22px;}
+  .guide-card{padding:18px 17px 16px;}
+  .guide-text{font-size:11px;}
+  .guide-btns .btn{padding:7px 12px;}
+  .share-overlay{padding:14px;}
+  .share-canvas{max-height:66dvh;width:auto;max-width:100%;}
+  .evo-toast{padding:24px 18px 20px;}
+}
+@media(max-width:920px) and (max-height:740px){
+  .stage-head{max-width:54%;}
+  .spirit-desc{display:none;}
+  .spirit{width:150px;height:150px;}
+  .spirit-inner{width:96px;height:96px;}
+  .spirit-ring{width:136px;height:136px;}
+  .dock-wrap{padding-bottom:8px;}
+  .dock-title{display:none;}
+  .emotion-dock{gap:5px;}
+  .emotion-ball{width:44px;height:44px;}
+  .emotion-ball .ball-emoji{font-size:13px;}
+  .emotion-ball .ball-name{font-size:7.5px;}
+  .water-fab{width:52px;height:52px;bottom:112px;}
+  .water-fab .wf-text{display:none;}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    scroll-behavior:auto!important;
+    transition-duration:.01ms!important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- 星云背景画布 -->
+<canvas id="nebulaCanvas"></canvas>
+
+<div class="app">
+
+  <!-- ============================================================
+       顶栏
+       ============================================================ -->
+  <header class="topbar">
+    <div class="brand" id="brandHome" role="button" tabindex="0" aria-label="返回星灵主页">
+      <div class="brand-mark" aria-hidden="true"><img src="./icons/icon-192.png" alt=""></div>
+      <div class="brand-text">
+        <h1>情绪盲盒 · 星灵日常 <span style="font-size:10px;color:var(--muted);font-weight:500;">APP</span></h1>
+        <p>情绪有处安放，喝水也值得被温柔记录</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat" title="情绪投喂总次数">
+        <b id="statFeed">0</b><span>情绪投喂</span>
+      </div>
+      <div class="stat water" id="statWaterCard" title="今日饮水总量 / 目标">
+        <div class="stat-fill" id="statWaterFill" style="width:0%;"></div>
+        <div class="stat-inner">
+          <b id="statWaterToday">0</b>
+          <span>今日饮水 ml</span>
+        </div>
+        <div class="stat-bar" id="statWaterBar" style="width:0%;"></div>
+      </div>
+      <div class="stat" title="水之印记">
+        <b id="statMark">0</b><span>水之印记</span>
+      </div>
+      <div class="stat" title="转化物总数">
+        <b id="statItem">0</b><span>转化物</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       主布局
+       ============================================================ -->
+  <main class="layout">
+
+    <!-- ---------- 舞台 ---------- -->
+    <section class="stage" id="stageEl">
+      <div class="stage-head">
+        <div class="spirit-name" id="spiritName">
+          🌟 星云幼灵 <span class="sn-tag" id="spiritFormTag">初始形态</span>
+        </div>
+        <div class="spirit-desc" id="spiritDesc">诞生于星云的守护兽，正在学习感受你的情绪。</div>
+      </div>
+
+      <div class="today-chip" id="todayChip">
+        <span class="tc-dot"></span>
+        <span id="todayChipText">今日 0%</span>
+      </div>
+
+      <div class="spirit-area" id="spiritArea">
+        <div class="spirit form-star mood-happy" id="spirit">
+          <div class="spirit-bubble" id="spiritBubble">星灵想喝水了 💧</div>
+          <div class="spirit-aura"></div>
+          <div class="spirit-ring"></div>
+          <div class="spirit-inner">
+            <div class="spirit-body">
+              <div class="eye eye-l"></div>
+              <div class="eye eye-r"></div>
+              <div class="cheek cheek-l"></div>
+              <div class="cheek cheek-r"></div>
+              <div class="mouth"></div>
+            </div>
+            <div class="spirit-tail"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 喝水悬浮按钮 -->
+      <button class="water-fab" id="btnOpenWater" title="记录一次喝水">
+        <span class="wf-drop">💧</span>
+        <span class="wf-text">喝水</span>
+      </button>
+
+      <!-- 情绪球坞 -->
+      <div class="dock-wrap">
+        <div class="dock-title" id="dockTitle">情绪库 · 拖拽情绪球到星灵身上，也可以直接轻点投喂</div>
+        <div class="emotion-dock" id="emotionDock"></div>
+        <div class="multi-bar" id="multiBar">
+          <span class="mb-hint" id="multiHint">已选 0 个情绪</span>
+          <button class="btn ghost" id="btnMultiClear">清空</button>
+          <button class="btn primary" id="btnMultiFeed">一起投喂</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 侧栏 ---------- -->
+    <aside class="side">
+      <nav class="tabs">
+        <button class="tab active" data-tab="garden">🌱 花园</button>
+        <button class="tab" data-tab="collection">📖 收藏</button>
+        <button class="tab" data-tab="water">💧 饮水</button>
+        <button class="tab" data-tab="spirit">✨ 星灵</button>
+        <button class="tab" data-tab="data">⚙️ 数据</button>
+      </nav>
+
+      <div class="tab-body">
+
+        <!-- 花园 -->
+        <section class="panel active" data-panel="garden">
+          <h3 class="panel-title">情绪自留地</h3>
+          <p class="panel-sub">完成盲盒任务、记录喝水获得的转化物会累积在这里。拖动转化物可以自由摆放，装饰属于你的花园。</p>
+          <div id="todoQueueBox"></div>
+          <div class="garden-wrap" id="gardenWrap"></div>
+          <div class="garden-tip">💡 拖动格子中的转化物可以交换位置；同种转化物会叠加显示数量</div>
+        </section>
+
+        <!-- 收藏馆 -->
+        <section class="panel" data-panel="collection">
+          <h3 class="panel-title">星光收藏馆</h3>
+          <p class="panel-sub">你收藏的治愈语录与完成过的治愈任务。点击 ⭐ 可以标记心爱语录，点击 ↗ 生成分享卡片。</p>
+          <div class="collection-list" id="collectionList"></div>
+        </section>
+
+        <!-- 饮水 -->
+        <section class="panel" data-panel="water">
+          <h3 class="panel-title">饮水正念</h3>
+          <p class="panel-sub">喝水即正念：每一次饮水，都是与身体的对话，也是给星灵的滋养。</p>
+          <div id="waterPanel"></div>
+        </section>
+
+        <!-- 星灵 -->
+        <section class="panel" data-panel="spirit">
+          <h3 class="panel-title">星灵档案</h3>
+          <p class="panel-sub">星灵的进化方向，真实反映你近期的情绪倾向与喝水习惯。</p>
+          <div id="evolutionBox"></div>
+        </section>
+
+        <!-- 数据 -->
+        <section class="panel" data-panel="data">
+          <h3 class="panel-title">设置</h3>
+          <p class="panel-sub">管理数据、提醒与隐私偏好。你的记录只保存在当前设备，不会上传，也不会用于分析或评分。</p>
+
+          <div class="panel-title" style="font-size:12.5px;margin:0 0 10px;">数据管理</div>
+          <div class="data-actions">
+            <button class="btn ghost" id="btnExportJson">📤 导出全部数据（JSON）</button>
+            <button class="btn ghost" id="btnImportJson">📥 导入备份（JSON）</button>
+            <button class="btn ghost" id="btnExportWaterCsv">💧 导出喝水记录（CSV）</button>
+            <button class="btn ghost" id="btnExportEmotionCsv">😊 导出情绪记录（CSV）</button>
+            <button class="btn danger" id="btnReset">🗑️ 清空所有数据</button>
+          </div>
+          <input class="sr-only" type="file" id="importFile" accept=".json,application/json">
+
+          <div class="panel-title" style="font-size:12.5px;margin:18px 0 10px;">偏好设置</div>
+          <div class="setting-row">
+            <div class="sr-left">
+              <span>🌌 氛围模式</span>
+              <span class="sr-desc">降低色彩饱和度，星云粒子更密，星灵呼吸更慢</span>
+            </div>
+            <div class="switch" id="switchAmbient" role="switch" tabindex="0" aria-checked="false" aria-label="氛围模式"></div>
+          </div>
+          <div class="setting-row">
+            <div class="sr-left">
+              <span>💧 页面内喝水提醒</span>
+              <span class="sr-desc">每 90 分钟，星灵冒泡提醒你喝水（仅页面内，无需权限）</span>
+            </div>
+            <div class="switch" id="switchReminder" role="switch" tabindex="0" aria-checked="false" aria-label="页面内喝水提醒"></div>
+          </div>
+
+          <!-- 隐私承诺 -->
+          <div class="privacy-card">
+            <div class="pc-head" id="privacyHead">
+              <span class="pc-title">🛡️ 隐私承诺</span>
+              <span class="pc-arrow" id="privacyArrow">▶</span>
+            </div>
+            <div class="pc-body" id="privacyBody">
+              <ul>
+                <li>所有情绪记录、喝水记录、花园、收藏馆均仅存储在本地浏览器。</li>
+                <li>绝不分析用户情绪用于商业目的。</li>
+                <li>不对情绪进行「评分」或「排名」。</li>
+                <li>不联网、不上传、不需要注册账号即可使用全部功能。</li>
+                <li>数据可随时一键导出或彻底删除，完全由你掌控。</li>
+              </ul>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+      <div class="side-footer">
+        © 2026 情绪盲盒 · 星灵日常 · 本地存储 · 可离线使用
+      </div>
+    </aside>
+
+  </main>
+
+  <nav class="mobile-nav" id="mobileNav" aria-label="主要导航">
+    <button class="mobile-nav-btn active" type="button" data-mobile-home aria-label="星灵主页">
+      <span class="mn-icon">✨</span><span>星灵</span>
+    </button>
+    <button class="mobile-nav-btn" type="button" data-mobile-tab="garden" aria-label="花园">
+      <span class="mn-icon">🌱</span><span>花园</span>
+    </button>
+    <button class="mobile-nav-btn" type="button" data-mobile-tab="collection" aria-label="收藏">
+      <span class="mn-icon">📖</span><span>收藏</span>
+    </button>
+    <button class="mobile-nav-btn" type="button" data-mobile-tab="water" aria-label="饮水">
+      <span class="mn-icon">💧</span><span>饮水</span>
+    </button>
+    <button class="mobile-nav-btn" type="button" data-mobile-tab="spirit" aria-label="星灵档案">
+      <span class="mn-icon">🌙</span><span>档案</span>
+    </button>
+    <button class="mobile-nav-btn" type="button" data-mobile-tab="data" aria-label="数据与设置">
+      <span class="mn-icon">⚙️</span><span>我的</span>
+    </button>
+  </nav>
+</div>
+
+<div class="sr-only" id="liveRegion" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ============================================================
+     盲盒弹窗
+     ============================================================ -->
+<div class="modal" id="boxModal">
+  <div class="modal-card">
+    <button class="modal-close" data-close="boxModal" aria-label="关闭">✕</button>
+    <div class="box-stage"><div class="box-icon" id="boxIcon">🎁</div></div>
+    <h2 class="modal-title" id="boxTitle">转化盲盒</h2>
+    <p class="modal-sub" id="boxSub"></p>
+    <div class="box-body" id="boxBody"></div>
+    <div class="modal-actions" id="boxActions"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     喝水记录弹窗
+     ============================================================ -->
+<div class="modal" id="waterModal">
+  <div class="modal-card">
+    <button class="modal-close" data-close="waterModal" aria-label="关闭">✕</button>
+    <div class="box-stage">
+      <div class="box-icon" style="animation:none;filter:drop-shadow(0 0 26px rgba(100,220,255,.9));">💧</div>
+    </div>
+    <h2 class="modal-title" id="waterModalTitle">记录喝水</h2>
+    <p class="modal-sub" id="waterModalSub">喝水即正念 · 记录下此刻的液体与心情</p>
+
+    <div class="water-section">
+      <div class="ws-label">🥤 喝了什么</div>
+      <div class="drink-grid" id="drinkGrid"></div>
+    </div>
+
+    <div class="water-section">
+      <div class="ws-label">📏 容量</div>
+      <div class="ml-row" id="mlRow"></div>
+      <div class="ml-custom">
+        <input type="number" id="mlInput" min="10" max="2000" step="10" value="200" aria-label="饮水量毫升">
+        <span>ml</span>
+      </div>
+      <div class="continuous-row">
+        <div class="cr-text">
+          这是一次连续饮水
+          <em>开启后印记按每 200ml 记 1 个，鼓励一次喝够</em>
+        </div>
+        <div class="switch" id="switchContinuous" role="switch" tabindex="0" aria-checked="false" aria-label="连续饮水"></div>
+      </div>
+      <div class="time-row">
+        <input type="time" id="timeInput" aria-label="记录时间">
+        <span class="tr-hint">可补记今天早些时候</span>
+      </div>
+    </div>
+
+    <div class="water-section">
+      <div class="ws-label">🫧 此刻心情 <em>（可选，与喝水一起记录）</em></div>
+      <div class="mood-row" id="moodRow"></div>
+      <div class="mood-suggest" id="moodSuggest">未选择心情 · 本次将只记录饮水</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" data-close="waterModal">取消</button>
+      <button class="btn primary" id="btnConfirmWater">💧 确认记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     确认清空弹窗
+     ============================================================ -->
+<div class="modal" id="confirmModal">
+  <div class="modal-card small">
+    <h2 class="modal-title">确认清空数据？</h2>
+    <p class="modal-sub">所有情绪记录、喝水记录、花园转化物、星光收藏馆内容都将被删除，且无法恢复。</p>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close="confirmModal">取消</button>
+      <button class="btn danger" id="btnConfirmReset">确认清空</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     编辑喝水记录弹窗
+     ============================================================ -->
+<div class="modal" id="editWaterModal">
+  <div class="modal-card small">
+    <button class="modal-close" data-close="editWaterModal" aria-label="关闭">✕</button>
+    <div class="box-stage">
+      <div class="box-icon" style="animation:none;filter:drop-shadow(0 0 22px rgba(100,220,255,.8));">✏️</div>
+    </div>
+    <h2 class="modal-title">修改饮水记录</h2>
+    <p class="modal-sub">调整容量或删除这条记录</p>
+
+    <div class="water-section">
+      <div class="ws-label">🥤 液体类型</div>
+      <div class="drink-grid" id="editDrinkGrid"></div>
+    </div>
+
+    <div class="water-section">
+      <div class="ws-label">📏 容量</div>
+      <div class="ml-row" id="editMlRow"></div>
+      <div class="ml-custom">
+        <input type="number" id="editMlInput" min="10" max="2000" step="10" value="200">
+        <span>ml</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn danger" id="btnDeleteWater">🗑️ 删除</button>
+      <button class="btn primary" id="btnSaveWater">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     引导遮罩
+     ============================================================ -->
+<div class="guide-overlay" id="guideOverlay">
+  <div class="guide-highlight" id="guideHighlight"></div>
+  <div class="guide-card" id="guideCard">
+    <div class="guide-step" id="guideStep">第 1 / 3 步</div>
+    <h3 class="guide-title" id="guideTitle">把情绪投喂给星灵</h3>
+    <p class="guide-text" id="guideText">按住下方任意一个情绪球，拖到星灵身上；也可以直接轻点情绪球投喂。每一次投喂都会掉落一个转化盲盒。</p>
+    <div class="guide-actions">
+      <div class="guide-dots" id="guideDots">
+        <i class="on"></i><i></i><i></i>
+      </div>
+      <div class="guide-btns">
+        <button class="btn ghost" id="guideSkip">跳过</button>
+        <button class="btn primary" id="guideNext">下一步</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     进化提示
+     ============================================================ -->
+<div class="evo-toast" id="evoToast">
+  <div class="et-emoji" id="evoEmoji">🌟</div>
+  <div class="et-label">星灵进化</div>
+  <div class="et-name" id="evoName">光之花灵</div>
+  <div class="et-desc" id="evoDesc">星灵感应到你的变化。</div>
+  <button class="btn primary" id="evoOk">收下这份变化</button>
+</div>
+
+<!-- ============================================================
+     分享卡片
+     ============================================================ -->
+<div class="share-overlay" id="shareOverlay">
+  <div class="share-box">
+    <canvas class="share-canvas" id="shareCanvas" width="640" height="960"></canvas>
+    <div class="share-actions">
+      <button class="btn ghost" id="shareClose">关闭</button>
+      <button class="btn primary" id="shareDownload">⬇️ 保存图片</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   情绪盲盒 · 星灵日常  V1.2
+   JS 总表
+   模块 01 静态数据
+   模块 02 工具函数
+   模块 03 状态管理
+   模块 04 星云背景
+   模块 05 情绪球坞 & 拖拽投喂
+   模块 06 投喂反馈（粒子 / 浮字 / 星灵表情）
+   模块 07 盲盒系统（含稀有度 / 待办队列）
+   模块 08 喝水记录系统（含补记 / 编辑 / 连续饮水）
+   模块 09 星灵进化
+   模块 10 花园系统（含拖动摆放）
+   模块 11 收藏馆（收藏 / 分享卡片）
+   模块 12 情绪日历
+   模块 13 数据面板（导出 / 导入 / 设置）
+   模块 14 引导流程
+   模块 15 弹窗 / 标签页 / 全局事件
+   模块 16 启动
+   ============================================================ */
+
+/* ============================================================
+   模块 01 · 静态数据
+   ============================================================ */
+
+/* 情绪库（对应文档 2.1）
+   9 种情绪，正向 4 + 负向 5 */
+const EMOTIONS = [
+  { key:'joy',       name:'喜悦', emoji:'😊', type:'pos', color:'#ffd166' },
+  { key:'calm',      name:'平静', emoji:'😌', type:'pos', color:'#7ee8d0' },
+  { key:'grateful',  name:'感激', emoji:'🙏', type:'pos', color:'#ffb3c6' },
+  { key:'hope',      name:'希望', emoji:'✨', type:'pos', color:'#a8d8ff' },
+  { key:'anxiety',   name:'焦虑', emoji:'😰', type:'neg', color:'#b39ddb' },
+  { key:'sad',       name:'悲伤', emoji:'😢', type:'neg', color:'#7fa8e8' },
+  { key:'tired',     name:'疲惫', emoji:'😴', type:'neg', color:'#9aa0b8' },
+  { key:'lonely',    name:'孤独', emoji:'🌙', type:'neg', color:'#8f7fd6' },
+  { key:'irritated', name:'烦躁', emoji:'😤', type:'neg', color:'#ff8a80' }
+];
+
+/* 液体类型（模块 08）
+   每种液体带一个隐含情绪倾向 suggestMood，用于自动推荐心情 */
+const DRINKS = [
+  { key:'plain',  name:'白开水', emoji:'💧', color:'#a8d8ff', suggestMood:'calm'  },
+  { key:'warm',   name:'温水',   emoji:'🍵', color:'#7ee8d0', suggestMood:'calm'  },
+  { key:'cold',   name:'冰水',   emoji:'🧊', color:'#8fd0ff', suggestMood:'hope'  },
+  { key:'tea',    name:'茶',     emoji:'🫖', color:'#c8e6a0', suggestMood:'calm'  },
+  { key:'coffee', name:'咖啡',   emoji:'☕', color:'#d4a574', suggestMood:'anxiety' },
+  { key:'juice',  name:'果汁',   emoji:'🧃', color:'#ffb347', suggestMood:'joy'   },
+  { key:'milk',   name:'牛奶',   emoji:'🥛', color:'#e8e8f0', suggestMood:'grateful' },
+  { key:'soda',   name:'气泡水', emoji:'🫧', color:'#b0e0ff', suggestMood:'hope'  },
+  { key:'soup',   name:'汤',     emoji:'🍲', color:'#ffcc99', suggestMood:'grateful' }
+];
+
+const ML_PRESETS = [100, 200, 300, 500];
+const WATER_GOAL = 1500;                // 每日饮水目标（ml）
+const WATER_MARK_UNIT = 200;            // 连续饮水时每多少 ml 记 1 个印记
+const TODO_EXPIRE_MS = 24 * 60 * 60 * 1000; // 待办任务保留 24 小时
+
+/* 治愈任务库（对应文档 2.2）
+   40+ 任务，带标签，用于多样性抽取
+   标签：water 喝水 / breath 呼吸 / write 书写 / body 身体 / social 社交 / observe 观察 */
+const TASKS = [
+  { text:'喝一口温水，感受它从喉咙流到胸口的流动', tag:'water', water:true },
+  { text:'喝三口水，每一次吞咽都试着微笑一下', tag:'water', water:true },
+  { text:'慢慢喝完半杯水，数一数自己一共吞咽了几次', tag:'water', water:true },
+  { text:'小口喝水三次，每次呼气时让肩膀放松下来', tag:'water', water:true },
+  { text:'喝一口水，想象它是一颗落入星云的流星', tag:'water', water:true },
+  { text:'喝一口温水，感受杯子传到掌心的温度', tag:'water', water:true },
+  { text:'用你最喜欢的杯子喝一口水，然后感谢它陪伴你', tag:'water', water:true },
+  { text:'喝一口水，在心里对自己说一句「我在照顾你」', tag:'water', water:true },
+  { text:'慢慢地喝完一整杯水，只专注吞咽这一个动作', tag:'water', water:true },
+  { text:'喝一口凉水，感受清凉从舌尖一路滑到胃里', tag:'water', water:true },
+
+  { text:'深呼吸 5 次，想象焦虑正在化为雾气慢慢飘散', tag:'breath', water:false },
+  { text:'把手机放下 30 秒，只做三次深长的呼吸', tag:'breath', water:false },
+  { text:'吸气 4 秒，屏住 4 秒，呼气 6 秒，重复 3 轮', tag:'breath', water:false },
+  { text:'闭上眼睛，听一次自己呼吸的声音', tag:'breath', water:false },
+  { text:'数一数此刻你能闻到的气味，不必评价，只闻', tag:'breath', water:false },
+  { text:'把手放在胸口，感受三次心跳之后再呼吸一次', tag:'breath', water:false },
+
+  { text:'写下此刻最强烈的情绪，然后给它起一个颜色', tag:'write', water:false },
+  { text:'把烦躁写在纸上，然后折成一架纸飞机', tag:'write', water:false },
+  { text:'给此刻的心情起一个天气的名字，并把它记下来', tag:'write', water:false },
+  { text:'写下三件今天让你感到「还好」的小事', tag:'write', water:false },
+  { text:'用一句话给今天的自己写封信，不必寄出', tag:'write', water:false },
+  { text:'把此刻最想说的话写下来，然后撕掉或保留，由你决定', tag:'write', water:false },
+  { text:'记录一个你最近反复想起的念头，只观察不评判', tag:'write', water:false },
+
+  { text:'起身走动一分钟，让停滞的星云重新流动起来', tag:'body', water:false },
+  { text:'伸个懒腰，想象星灵也正在舒展身体', tag:'body', water:false },
+  { text:'站起来，双手向上伸展 15 秒，然后慢慢放下', tag:'body', water:false },
+  { text:'转动肩膀 5 次，再轻轻转动脖颈 3 次', tag:'body', water:false },
+  { text:'闭上眼睛，用指尖轻轻按摩太阳穴 20 秒', tag:'body', water:false },
+  { text:'赤脚踩在地板上，感受 10 秒真实的触感', tag:'body', water:false },
+  { text:'用力握紧拳头 5 秒，再完全松开，感受放松', tag:'body', water:false },
+
+  { text:'对着镜子说一句温柔的话，像对最好的朋友那样', tag:'social', water:false },
+  { text:'给一个你在意的人发一句简单的问候', tag:'social', water:false },
+  { text:'回想一个最近帮助过你的人，在心里感谢他', tag:'social', water:false },
+  { text:'抱一抱身边的人，或者抱一抱自己', tag:'social', water:false },
+  { text:'对服务你的人说一声「谢谢」，并看着对方眼睛', tag:'social', water:false },
+  { text:'给未来的自己留一句鼓励，藏在心里或者写下来', tag:'social', water:false },
+
+  { text:'听一首喜欢的歌，让情绪随着旋律自由流动', tag:'observe', water:false },
+  { text:'闭上眼感受双手的温度，认真感谢今天的自己', tag:'observe', water:false },
+  { text:'观察窗外的一个小细节，比如一片云或一片叶子', tag:'observe', water:false },
+  { text:'找一件你每天都见到却没仔细看过的东西，看它 20 秒', tag:'observe', water:false },
+  { text:'留意此刻最远的一个声音，听它 10 秒', tag:'observe', water:false },
+  { text:'把注意力放在脚底，感受它与地面的接触', tag:'observe', water:false },
+  { text:'回想今天最平静的一刻，在哪里、在做什么', tag:'observe', water:false }
+];
+
+/* 治愈语录（对应文档 2.2 灵感碎片） */
+const QUOTES = [
+  '情绪是灵魂的天气，允许它阴晴不定。',
+  '悲伤之后会有宁静，就像雨天过后星光更清澈。',
+  '没有「坏」的情绪，只有待转化的能量。',
+  '喝下的每一口水，都是星灵的光芒。',
+  '记录下的每一种情绪，都会开出独一无二的花。',
+  '你不需要一直发光，偶尔暗淡也是星云的一部分。',
+  '焦虑是星云在加速旋转，它总会慢慢安静下来。',
+  '允许自己时而快乐、时而低落，星灵都会陪着你。',
+  '喝水即正念：每一次饮水，都是与身体的对话。',
+  '所有情绪都是星云的颜料，没有哪一种是多余的。',
+  '情绪来了又走，你一直都在。',
+  '把注意力放回呼吸，就是回到家的路。',
+  '今天的你，已经做得足够好了。',
+  '不必急着变好，先好好待着。',
+  '温柔地对待自己，是最了不起的勇敢。'
+];
+
+/* 隐藏语录（每 3 个印记 / 饮水达标时解锁） */
+const HIDDEN_QUOTES = [
+  '【隐藏语录】水记得你每一次温柔的吞咽。',
+  '【隐藏语录】你照顾自己的样子，星云都看在眼里。',
+  '【隐藏语录】最微小的自我照顾，是最长久的净化仪式。',
+  '【隐藏语录】今日饮水达标，星云为你亮起一整片星光。',
+  '【隐藏语录】每一次把水咽下去，都是在告诉自己：我值得被照顾。',
+  '【隐藏语录】星灵偷偷告诉你：它最喜欢你认真喝水的样子。'
+];
+
+/* 转化物（对应文档 2.3） */
+const ITEMS = [
+  { name:'水珠星尘', emoji:'💧', rare:false },
+  { name:'安宁叶片', emoji:'🍃', rare:false },
+  { name:'治愈花苞', emoji:'🌸', rare:false },
+  { name:'星光碎片', emoji:'⭐', rare:false },
+  { name:'雾晶石',   emoji:'🔮', rare:false },
+  { name:'暖阳果',   emoji:'🍑', rare:false },
+  { name:'静心石',   emoji:'🪨', rare:false },
+  { name:'彩虹苔',   emoji:'🌈', rare:false },
+  { name:'深海之泪', emoji:'🌊', rare:true  },
+  { name:'星云水莲', emoji:'🪷', rare:true  },
+  { name:'永恒水印', emoji:'💠', rare:true  }
+];
+
+/* 星灵形态（对应文档 3.1） */
+const FORMS = {
+  star : { name:'星云幼灵',   emoji:'🌟', tag:'初始形态', desc:'诞生于星云的守护兽，正在学习感受你的情绪。' },
+  light: { name:'光之花灵',   emoji:'🌸', tag:'光愈形态', desc:'喜悦与希望滋养出光的花瓣，星灵周身泛起温暖的金色光晕。' },
+  mist : { name:'雾隐守护者', emoji:'🌫️', tag:'雾隐形态', desc:'它温柔地承接了你的焦虑与悲伤，把它们化作朦胧的雾。' },
+  water: { name:'水之圣灵',   emoji:'💧', tag:'水之形态', desc:'喝水是最温柔的净化仪式，星灵在水的记忆里绽放成圣灵。' }
+};
+
+/* 星灵短反馈文案（对应优化第 9 条） */
+const FEEDBACK_LINES = {
+  joy:      ['这颗光好甜！','你的喜悦让星云亮了一下。','我把它收好了，像一颗糖。'],
+  calm:     ['安静的水面，真好。','我陪你一起平静。','这一颗很轻，像一片羽毛。'],
+  grateful: ['被感谢过的星云会更亮。','我感受到了你的温度。','谢谢你把这份心意分给我。'],
+  hope:     ['希望是最远的星光。','我看到前面的光了。','把它种下，会开花的。'],
+  anxiety:  ['我先帮你拿着它。','它转得有点快，我陪它慢下来。','不用怕，星云会把它揉成雾。'],
+  sad:      ['下雨也没关系，我撑伞。','我在这里，不用急着好起来。','把它给我吧，你可以歇一会儿。'],
+  tired:    ['去躺一会儿吧，我守着。','累不是错，休息也不是。','这颗我收下了，你去喝口水。'],
+  lonely:   ['你不是一个人，星云里有我。','我一直在。','今晚的月亮，我们一起看。'],
+  irritated:['烧起来也没关系，我接着。','我把它吹凉一点点。','先喝口水，再决定要不要生气。']
+};
+
+/* 存储键 */
+const STORAGE_KEY = 'emotion_spirit_state_v1';
+const GUIDE_KEY   = 'emotion_spirit_guide_done';
+
+/* 标签中文名 */
+const TAG_NAMES = {
+  water:'喝水', breath:'呼吸', write:'书写',
+  body:'身体', social:'社交', observe:'观察'
+};
+
+/* ============================================================
+   模块 02 · 工具函数
+   ============================================================ */
+
+function pick(arr){
+  if(!arr || arr.length === 0) return null;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function hexA(hex, a){
+  if(!hex || hex[0] !== '#' || hex.length < 7) return `rgba(150,120,255,${a})`;
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function fmtTime(ts){
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function fmtHM(ts){
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2,'0');
+  return `${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function fmtDate(ts){
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2,'0');
+  return `${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+
+function todayKey(ts){
+  const d = new Date(ts === undefined ? Date.now() : ts);
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function debounce(fn, wait){
+  let t = null;
+  return function(...args){
+    if(t) clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), wait);
+  };
+}
+
+function vibrate(ms){
+  try{
+    if(navigator.vibrate) navigator.vibrate(ms || 28);
+  }catch(e){ /* 忽略 */ }
+}
+
+/* ============================================================
+   模块 03 · 状态管理
+   ============================================================ */
+
+function defaultState(){
+  const fed = {};
+  EMOTIONS.forEach(e => fed[e.key] = 0);
+  return {
+    fed,
+    water: 0,
+    marks: 0,
+    garden: {},
+    gardenSlots: [],       // 花园格子坐标：{ slotIndex: {name, count} } 用数组表示
+    collection: [],
+    log: [],
+    waterLog: [],
+    goalDays: [],
+    todoQueue: [],         // 待办盲盒任务
+    favQuotes: [],         // 收藏的心爱语录索引（按 collection 索引）
+    settings: {
+      ambient: false,
+      reminder: false
+    },
+    meta: {
+      lastFeedTime: 0,
+      lastReminderTime: 0,
+      formHistory: []
+    }
+  };
+}
+
+let state = defaultState();
+
+function normalizeState(data){
+  if(!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const base = defaultState();
+  const merged = Object.assign({}, base, data);
+  merged.fed = Object.assign({}, base.fed, data.fed || {});
+  merged.garden = data.garden && typeof data.garden === 'object' ? data.garden : {};
+  merged.gardenSlots = Array.isArray(data.gardenSlots) ? data.gardenSlots : [];
+  merged.collection = Array.isArray(data.collection) ? data.collection : [];
+  merged.log = Array.isArray(data.log) ? data.log : [];
+  merged.waterLog = Array.isArray(data.waterLog) ? data.waterLog : [];
+  merged.goalDays = Array.isArray(data.goalDays) ? data.goalDays : [];
+  merged.todoQueue = Array.isArray(data.todoQueue) ? data.todoQueue : [];
+  merged.favQuotes = Array.isArray(data.favQuotes) ? data.favQuotes : [];
+  merged.settings = Object.assign({}, base.settings, data.settings || {});
+  merged.meta = Object.assign({}, base.meta, data.meta || {});
+  return merged;
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    state = normalizeState(data) || defaultState();
+  }catch(err){
+    console.warn('读取本地数据失败', err);
+  }
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(err){
+    console.warn('保存本地数据失败', err);
+  }
+}
+
+/* ============================================================
+   模块 04 · 星云背景
+   ============================================================ */
+
+const canvas = document.getElementById('nebulaCanvas');
+const ctx = canvas.getContext('2d');
+let stars = [];
+let dpr = Math.min(window.devicePixelRatio || 1, 2);
+let starSpeedMultiplier = 1;
+
+function resizeCanvas(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width  = window.innerWidth  * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width  = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  buildStars();
+}
+
+function buildStars(){
+  const w = window.innerWidth, h = window.innerHeight;
+  const density = state.settings.ambient ? 8500 : 11000;
+  const count = Math.min(240, Math.floor(w * h / density));
+  stars = [];
+  for(let i = 0; i < count; i++){
+    stars.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.7 + 0.35,
+      a: Math.random() * 0.55 + 0.18,
+      vx: (Math.random() - 0.5) * 0.16,
+      vy: (Math.random() - 0.5) * 0.16,
+      hue: Math.random() < 0.5 ? 265 : 200,
+      tw: Math.random() * Math.PI * 2,
+      twSpeed: 0.012 + Math.random() * 0.02
+    });
+  }
+}
+
+function drawStars(){
+  const w = window.innerWidth, h = window.innerHeight;
+  ctx.clearRect(0, 0, w, h);
+
+  for(const s of stars){
+    s.x += s.vx * starSpeedMultiplier;
+    s.y += s.vy * starSpeedMultiplier;
+    s.tw += s.twSpeed * starSpeedMultiplier;
+
+    if(s.x < -10) s.x = w + 10;
+    if(s.x > w + 10) s.x = -10;
+    if(s.y < -10) s.y = h + 10;
+    if(s.y > h + 10) s.y = -10;
+
+    const alpha = s.a * (0.65 + 0.35 * Math.sin(s.tw));
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${s.hue}, 90%, 78%, ${alpha})`;
+    ctx.fill();
+  }
+
+  requestAnimationFrame(drawStars);
+}
+
+/* ============================================================
+   模块 05 · 情绪球坞 & 拖拽投喂
+   ============================================================ */
+
+const dockEl       = document.getElementById('emotionDock');
+const multiBar     = document.getElementById('multiBar');
+const multiHint    = document.getElementById('multiHint');
+const dockTitleEl  = document.getElementById('dockTitle');
+
+let multiSelectMode = false;
+let selectedEmotions = [];
+
+function renderDock(){
+  dockEl.innerHTML = '';
+  EMOTIONS.forEach(e => {
+    const b = document.createElement('button');
+    b.className = 'emotion-ball';
+    b.dataset.key = e.key;
+    b.dataset.emoji = e.emoji;
+    b.dataset.color = e.color;
+    b.type = 'button';
+    b.setAttribute('aria-label', `投喂${e.name}给星灵`);
+    b.style.background = `radial-gradient(circle at 35% 28%, ${hexA(e.color,.46)}, rgba(255,255,255,.04) 74%)`;
+    b.style.borderColor = hexA(e.color,.5);
+    b.style.boxShadow = `0 6px 18px ${hexA(e.color,.16)}`;
+    b.title = `拖拽「${e.name}」投喂给星灵，或点击直接投喂`;
+    b.innerHTML = `
+      <span class="ball-emoji">${e.emoji}</span>
+      <span class="ball-name">${e.name}</span>
+      <span class="ball-count" data-count="${e.key}">0</span>
+    `;
+    dockEl.appendChild(b);
+  });
+  updateBallCounts();
+}
+
+function updateBallCounts(){
+  EMOTIONS.forEach(e => {
+    const el = dockEl.querySelector(`[data-count="${e.key}"]`);
+    if(el){
+      const n = state.fed[e.key] || 0;
+      el.textContent = n;
+      el.style.display = n > 0 ? 'grid' : 'none';
+    }
+  });
+}
+
+/* ---------- 拖拽 ---------- */
+let drag = null;
+
+function isOverSpirit(x, y){
+  const r = spiritEl.getBoundingClientRect();
+  const pad = 46;
+  return x >= r.left - pad && x <= r.right + pad &&
+         y >= r.top  - pad && y <= r.bottom + pad;
+}
+
+dockEl.addEventListener('pointerdown', e => {
+  const ball = e.target.closest('.emotion-ball');
+  if(!ball || drag) return;
+
+  // 多选模式：点击切换选中
+  if(multiSelectMode){
+    e.preventDefault();
+    toggleEmotionSelect(ball.dataset.key, ball);
+    return;
+  }
+
+  e.preventDefault();
+
+  const key = ball.dataset.key;
+  const color = ball.dataset.color;
+  const rect = ball.getBoundingClientRect();
+
+  const ghost = document.createElement('div');
+  ghost.className = 'drag-ghost';
+  ghost.textContent = ball.dataset.emoji;
+  ghost.style.setProperty('--c', color);
+  ghost.style.left = (rect.left + rect.width / 2) + 'px';
+  ghost.style.top  = (rect.top  + rect.height / 2) + 'px';
+  document.body.appendChild(ghost);
+
+  drag = {
+    key,
+    ghost,
+    ball,
+    startX: e.clientX,
+    startY: e.clientY,
+    moved: false
+  };
+  ball.classList.add('dragging');
+});
+
+window.addEventListener('pointermove', e => {
+  if(!drag) return;
+  const dx = e.clientX - drag.startX;
+  const dy = e.clientY - drag.startY;
+  if(Math.hypot(dx, dy) > 8) drag.moved = true;
+
+  drag.ghost.style.left = e.clientX + 'px';
+  drag.ghost.style.top  = e.clientY + 'px';
+
+  const over = isOverSpirit(e.clientX, e.clientY);
+  spiritEl.classList.toggle('hungry', over);
+  drag.ghost.style.transform = over ? 'scale(1.18)' : 'scale(1)';
+}, { passive: true });
+
+window.addEventListener('pointerup', e => {
+  if(!drag) return;
+  const { key, ghost, ball, moved } = drag;
+  const over = isOverSpirit(e.clientX, e.clientY);
+
+  ghost.remove();
+  ball.classList.remove('dragging');
+  spiritEl.classList.remove('hungry');
+  drag = null;
+
+  if(over || !moved){
+    feedEmotion(key);
+  }
+});
+
+window.addEventListener('pointercancel', () => {
+  if(!drag) return;
+  drag.ghost.remove();
+  drag.ball.classList.remove('dragging');
+  spiritEl.classList.remove('hungry');
+  drag = null;
+});
+
+/* ---------- 多选投喂 ---------- */
+
+function toggleEmotionSelect(key, ballEl){
+  const idx = selectedEmotions.indexOf(key);
+  if(idx >= 0){
+    selectedEmotions.splice(idx, 1);
+    ballEl.classList.remove('selected');
+  }else{
+    if(selectedEmotions.length >= 3){
+      floatText('最多同时选 3 个', '#ff9bb0');
+      return;
+    }
+    selectedEmotions.push(key);
+    ballEl.classList.add('selected');
+  }
+  updateMultiBar();
+}
+
+function updateMultiBar(){
+  if(selectedEmotions.length > 0){
+    multiBar.classList.add('show');
+    multiHint.textContent = `已选 ${selectedEmotions.length} 个情绪`;
+  }else{
+    multiBar.classList.remove('show');
+  }
+}
+
+function enterMultiMode(){
+  multiSelectMode = true;
+  dockTitleEl.textContent = '多选模式 · 点击最多 3 个情绪球，然后点击「一起投喂」';
+  multiBar.classList.add('show');
+  updateMultiBar();
+}
+
+function exitMultiMode(){
+  multiSelectMode = false;
+  selectedEmotions = [];
+  dockTitleEl.textContent = '情绪库 · 拖拽情绪球到星灵身上，也可以直接轻点投喂';
+  multiBar.classList.remove('show');
+  dockEl.querySelectorAll('.emotion-ball').forEach(b => b.classList.remove('selected'));
+}
+
+document.getElementById('btnMultiClear').addEventListener('click', () => {
+  selectedEmotions = [];
+  dockEl.querySelectorAll('.emotion-ball').forEach(b => b.classList.remove('selected'));
+  updateMultiBar();
+});
+
+document.getElementById('btnMultiFeed').addEventListener('click', () => {
+  if(selectedEmotions.length === 0){
+    floatText('请先选择情绪球', '#ff9bb0');
+    return;
+  }
+  const keys = selectedEmotions.slice();
+  exitMultiMode();
+  feedEmotionMulti(keys);
+});
+
+/* ============================================================
+   模块 06 · 投喂反馈
+   ============================================================ */
+
+const spiritEl       = document.getElementById('spirit');
+const spiritBubble   = document.getElementById('spiritBubble');
+const spiritNameEl   = document.getElementById('spiritName');
+const spiritDescEl   = document.getElementById('spiritDesc');
+const spiritFormTagEl= document.getElementById('spiritFormTag');
+const todayChip      = document.getElementById('todayChip');
+const todayChipText  = document.getElementById('todayChipText');
+
+/* 单次投喂 */
+function feedEmotion(key){
+  const emo = EMOTIONS.find(e => e.key === key);
+  if(!emo) return;
+
+  state.fed[key] = (state.fed[key] || 0) + 1;
+  state.log.push({ key, t: Date.now() });
+  if(state.log.length > 800) state.log = state.log.slice(-800);
+  state.meta.lastFeedTime = Date.now();
+  saveState();
+
+  // 星灵动画
+  spiritEl.classList.remove('eating');
+  void spiritEl.offsetWidth;
+  spiritEl.classList.add('eating');
+  setTimeout(() => spiritEl.classList.remove('eating'), 660);
+
+  // 粒子 + 浮字
+  burstParticles(emo.color);
+  floatText(`${emo.emoji} ${emo.name}`, emo.color);
+
+  // 星灵短反馈
+  showSpiritFeedback(emo);
+
+  // 表情
+  setSpiritMoodByEmotion(emo);
+
+  vibrate(30);
+
+  renderAll();
+
+  // 掉落盲盒
+  setTimeout(() => openBlindBox([emo]), 700);
+}
+
+/* 多选投喂 */
+function feedEmotionMulti(keys){
+  const emos = keys.map(k => EMOTIONS.find(e => e.key === k)).filter(Boolean);
+  if(emos.length === 0) return;
+
+  const now = Date.now();
+  emos.forEach(emo => {
+    state.fed[emo.key] = (state.fed[emo.key] || 0) + 1;
+    state.log.push({ key: emo.key, t: now });
+  });
+  if(state.log.length > 800) state.log = state.log.slice(-800);
+  state.meta.lastFeedTime = now;
+  saveState();
+
+  // 大吞噬动画
+  spiritEl.classList.remove('eating');
+  void spiritEl.offsetWidth;
+  spiritEl.classList.add('eating');
+  setTimeout(() => spiritEl.classList.remove('eating'), 660);
+
+  // 多重粒子
+  emos.forEach((emo, i) => {
+    setTimeout(() => burstParticles(emo.color), i * 90);
+  });
+  floatText(`✨ ${emos.length} 种情绪一起投喂`, '#bfb4ff');
+
+  // 合成表情
+  setSpiritMoodByEmotion(emos[0]);
+  showSpiritFeedback(emos[0]);
+
+  vibrate([20, 40, 20]);
+
+  renderAll();
+
+  // 盲盒：多选投喂时只掉 1 个但奖励翻倍
+  setTimeout(() => openBlindBox(emos, true), 700);
+}
+
+/* 星灵短反馈气泡 */
+let bubbleTimer = null;
+function showSpiritFeedback(emo){
+  const lines = FEEDBACK_LINES[emo.key] || ['我收下了。'];
+  const line = pick(lines);
+  spiritBubble.textContent = line;
+  spiritBubble.classList.add('show');
+
+  if(bubbleTimer) clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(() => {
+    spiritBubble.classList.remove('show');
+  }, 2600);
+}
+
+/* 星灵表情状态 */
+function setSpiritMoodByEmotion(emo){
+  spiritEl.classList.remove('mood-happy','mood-low','mood-water','mood-hungry');
+  if(emo.type === 'pos'){
+    spiritEl.classList.add('mood-happy');
+  }else if(emo.key === 'tired' || emo.key === 'sad' || emo.key === 'lonely'){
+    spiritEl.classList.add('mood-low');
+  }else{
+    spiritEl.classList.add('mood-happy');
+  }
+}
+
+function setSpiritMoodWater(){
+  spiritEl.classList.remove('mood-happy','mood-low','mood-hungry');
+  spiritEl.classList.add('mood-water');
+  setTimeout(() => {
+    if(spiritEl.classList.contains('mood-water')){
+      spiritEl.classList.remove('mood-water');
+      updateSpiritMoodByState();
+    }
+  }, 3800);
+}
+
+function updateSpiritMoodByState(){
+  spiritEl.classList.remove('mood-happy','mood-low','mood-water','mood-hungry');
+
+  const lastFeed = state.meta.lastFeedTime || 0;
+  const noFeedLong = Date.now() - lastFeed > 6 * 60 * 60 * 1000;
+
+  const { pos, neg, total } = getCounts();
+
+  if(total === 0){
+    spiritEl.classList.add('mood-happy');
+    return;
+  }
+  if(noFeedLong){
+    spiritEl.classList.add('mood-hungry');
+    return;
+  }
+  if(neg > pos * 1.3){
+    spiritEl.classList.add('mood-low');
+  }else{
+    spiritEl.classList.add('mood-happy');
+  }
+}
+
+/* 粒子爆发 */
+function burstParticles(color, cx, cy, count){
+  if(cx === undefined){
+    const r = spiritEl.getBoundingClientRect();
+    cx = r.left + r.width / 2;
+    cy = r.top  + r.height / 2;
+  }
+  count = count || 18;
+
+  for(let i = 0; i < count; i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.background = color;
+    p.style.boxShadow = `0 0 12px ${color}`;
+    p.style.left = cx + 'px';
+    p.style.top  = cy + 'px';
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 60 + Math.random() * 110;
+    p.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
+    p.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 950);
+  }
+}
+
+/* 浮字 */
+function floatText(text, color, cx, cy){
+  const liveRegion = document.getElementById('liveRegion');
+  if(liveRegion){
+    liveRegion.textContent = '';
+    requestAnimationFrame(() => { liveRegion.textContent = text; });
+  }
+  if(cx === undefined){
+    const r = spiritEl.getBoundingClientRect();
+    cx = r.left + r.width / 2;
+    cy = r.top  + r.height / 2;
+  }
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = text;
+  el.style.color = color;
+  el.style.left = cx + 'px';
+  el.style.top  = cy + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1450);
+}
+
+/* ============================================================
+   模块 07 · 盲盒系统
+   ============================================================ */
+
+const boxModal   = document.getElementById('boxModal');
+const boxIcon    = document.getElementById('boxIcon');
+const boxTitle   = document.getElementById('boxTitle');
+const boxSub     = document.getElementById('boxSub');
+const boxBody    = document.getElementById('boxBody');
+const boxActions = document.getElementById('boxActions');
+
+let pendingBox = null;
+
+/* 最近做过哪些任务标签，用于多样性抽取 */
+function getRecentTags(){
+  const recent = state.collection
+    .filter(c => c.type === 'task')
+    .slice(-12);
+  const tags = {};
+  recent.forEach(c => {
+    // 通过文本反查标签
+    const t = TASKS.find(x => x.text === c.text);
+    if(t && t.tag) tags[t.tag] = (tags[t.tag] || 0) + 1;
+  });
+  return tags;
+}
+
+/* 按多样性抽取一个任务 */
+function pickTaskDiverse(){
+  const tagCounts = getRecentTags();
+  const sorted = Object.keys(TAG_NAMES).sort((a,b) => (tagCounts[a]||0) - (tagCounts[b]||0));
+  // 权重最高的几个标签中随机选一个
+  const candidateTags = sorted.slice(0, 3);
+  const chosenTag = pick(candidateTags) || 'water';
+  const pool = TASKS.filter(t => t.tag === chosenTag);
+  return pick(pool) || pick(TASKS);
+}
+
+/* 盲盒稀有度
+   连续记录奖励：连续 3 天有记录 → 稀有概率提升；连续 7 天 → 必出一次传说 */
+function calcRarityBoost(){
+  const days = new Set(state.log.map(l => todayKey(l.t)));
+  const waterDays = new Set(state.waterLog.map(w => todayKey(w.t)));
+  const allDays = new Set([...days, ...waterDays]);
+  const sortedDays = Array.from(allDays).sort();
+
+  let streak = 0;
+  const now = new Date();
+  for(let i = 0; i < 30; i++){
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const k = todayKey(d.getTime());
+    if(allDays.has(k)){
+      streak++;
+    }else{
+      if(i > 0) break;
+    }
+  }
+
+  let boost = 0;
+  if(streak >= 3) boost = 0.18;
+  if(streak >= 5) boost = 0.30;
+  if(streak >= 7) boost = 0.50;
+  return { streak, boost };
+}
+
+/* 打开盲盒
+   emos: 情绪对象数组（支持多个）
+   isMulti: 是否多选投喂 */
+function openBlindBox(emos, isMulti){
+  const sourceEmo = emos[0];
+  const sourceNames = emos.map(e => e.name).join('、');
+
+  const rarityInfo = calcRarityBoost();
+
+  let boxType;
+  let rarity;
+  const r = Math.random();
+  const rareProb = 0.10 + rarityInfo.boost;
+  const legendProb = rarityInfo.streak >= 7 ? 0.10 : 0.02;
+
+  if(r < legendProb){
+    boxType = 'legend';
+    rarity = 'legend';
+  }else if(r < legendProb + rareProb){
+    boxType = Math.random() < 0.6 ? 'task' : 'quote';
+    rarity = 'rare';
+  }else{
+    boxType = Math.random() < 0.70 ? 'task' : 'quote';
+    rarity = 'normal';
+  }
+
+  if(boxType === 'legend'){
+    // 传说盲盒：必出稀有转化物 + 隐藏语录
+    pendingBox = {
+      type: 'legend',
+      text: '星灵从星云深处捧出了一件稀有的礼物……',
+      source: sourceEmo,
+      sourceNames,
+      rarity,
+      isMulti
+    };
+  }else if(boxType === 'task'){
+    const t = pickTaskDiverse();
+    pendingBox = {
+      type: 'task',
+      text: t.text,
+      tag: t.tag,
+      water: t.water,
+      source: sourceEmo,
+      sourceNames,
+      rarity,
+      isMulti
+    };
+  }else{
+    pendingBox = {
+      type: 'quote',
+      text: pick(QUOTES),
+      source: sourceEmo,
+      sourceNames,
+      rarity,
+      isMulti
+    };
+  }
+
+  // 渲染盲盒初始状态
+  boxIcon.textContent = rarity === 'legend' ? '🌟' : (rarity === 'rare' ? '✨' : '🎁');
+  boxIcon.className = 'box-icon' + (rarity === 'rare' ? ' rare' : '') + (rarity === 'legend' ? ' rare' : '');
+  boxTitle.textContent = rarity === 'legend' ? '传说盲盒' : (rarity === 'rare' ? '稀有盲盒' : '转化盲盒');
+
+  let subText = `「${sourceNames}」的能量正在盒中流转，星灵为你掉落了它……`;
+  if(isMulti){
+    subText = `你一起投喂了「${sourceNames}」，星灵回赠了一个${rarity === 'legend' ? '传说' : (rarity === 'rare' ? '稀有' : '')}盲盒。`;
+  }
+  if(rarityInfo.streak >= 3){
+    subText += `（已连续记录 ${rarityInfo.streak} 天，稀有概率提升）`;
+  }
+  boxSub.textContent = subText;
+
+  boxBody.innerHTML = '';
+  boxActions.innerHTML = '';
+
+  const btn = document.createElement('button');
+  btn.className = 'btn primary';
+  btn.textContent = rarity === 'legend' ? '🌟 开启传说盲盒' : '✨ 打开盲盒';
+  btn.addEventListener('click', revealBox);
+  boxActions.appendChild(btn);
+
+  // 继续投喂按钮
+  const btnContinue = document.createElement('button');
+  btnContinue.className = 'btn ghost';
+  btnContinue.textContent = '继续投喂';
+  btnContinue.addEventListener('click', () => {
+    hideModal('boxModal');
+    setTimeout(enterMultiMode, 320);
+  });
+  boxActions.appendChild(btnContinue);
+
+  showModal('boxModal');
+}
+
+/* 揭开盲盒 */
+function revealBox(){
+  if(!pendingBox) return;
+
+  if(pendingBox.type === 'legend'){
+    boxIcon.textContent = '🌟';
+    boxIcon.className = 'box-icon rare';
+    boxTitle.textContent = '传说盲盒';
+    boxSub.textContent = '星云为你亮起了一整片星光';
+    boxBody.innerHTML = `
+      <div class="box-text">
+        ${escapeHtml(pick(HIDDEN_QUOTES))}
+      </div>
+    `;
+    boxActions.innerHTML = '';
+
+    const b = document.createElement('button');
+    b.className = 'btn primary';
+    b.textContent = '收下传说馈赠';
+    b.addEventListener('click', completeLegend);
+    boxActions.appendChild(b);
+
+    const b2 = document.createElement('button');
+    b2.className = 'btn ghost';
+    b2.textContent = '稍后再开';
+    b2.addEventListener('click', () => hideModal('boxModal'));
+    boxActions.appendChild(b2);
+
+  }else if(pendingBox.type === 'task'){
+    boxIcon.textContent = '📜';
+    boxIcon.className = 'box-icon task' + (pendingBox.rarity === 'rare' ? ' rare' : '');
+    boxTitle.textContent = pendingBox.water ? '喝水正念任务' : '治愈任务';
+    boxSub.textContent = pendingBox.water
+      ? '这是一个「喝水正念」任务，完成后将额外记录水之印记'
+      : '把此刻的觉察，转化为一个微小的行动';
+    if(pendingBox.rarity === 'rare'){
+      boxSub.textContent += ' · 稀有任务，奖励翻倍';
+    }
+
+    boxBody.innerHTML = `
+      <div class="box-text">
+        ${escapeHtml(pendingBox.text)}
+        <div style="margin-top:10px;font-size:10.5px;color:var(--muted);">
+          标签：${TAG_NAMES[pendingBox.tag] || '治愈'}
+        </div>
+      </div>
+    `;
+    boxActions.innerHTML = '';
+
+    const b1 = document.createElement('button');
+    b1.className = 'btn primary';
+    b1.textContent = '✅ 完成任务';
+    b1.addEventListener('click', completeTask);
+    boxActions.appendChild(b1);
+
+    const b2 = document.createElement('button');
+    b2.className = 'btn ghost';
+    b2.textContent = '稍后再做';
+    b2.addEventListener('click', deferTask);
+    boxActions.appendChild(b2);
+
+  }else{
+    boxIcon.textContent = '💫';
+    boxIcon.className = 'box-icon quote' + (pendingBox.rarity === 'rare' ? ' rare' : '');
+    boxTitle.textContent = '灵感碎片';
+    boxSub.textContent = '来自星云的一句私语';
+    if(pendingBox.rarity === 'rare'){
+      boxSub.textContent += ' · 稀有语录';
+    }
+
+    boxBody.innerHTML = `<div class="box-text">${escapeHtml(pendingBox.text)}</div>`;
+    boxActions.innerHTML = '';
+
+    const b1 = document.createElement('button');
+    b1.className = 'btn primary';
+    b1.textContent = '📖 收进星光收藏馆';
+    b1.addEventListener('click', () => collectQuote(b1));
+    boxActions.appendChild(b1);
+
+    const b2 = document.createElement('button');
+    b2.className = 'btn ghost';
+    b2.textContent = '稍后再看';
+    b2.addEventListener('click', () => hideModal('boxModal'));
+    boxActions.appendChild(b2);
+  }
+}
+
+/* 完成传说盲盒 */
+function completeLegend(){
+  if(!pendingBox) return;
+
+  const rewards = [];
+  const rarePool = ITEMS.filter(i => i.rare);
+  const rare = pick(rarePool);
+  state.garden[rare.name] = (state.garden[rare.name] || 0) + 1;
+  rewards.push({ name: rare.name, emoji: rare.emoji, rare: true });
+
+  // 可能额外奖励
+  if(Math.random() < 0.5){
+    const normalPool = ITEMS.filter(i => !i.rare);
+    const extra = pick(normalPool);
+    state.garden[extra.name] = (state.garden[extra.name] || 0) + 1;
+    rewards.push({ name: extra.name, emoji: extra.emoji, rare: false });
+  }
+
+  state.collection.push({
+    type: 'quote',
+    text: pick(HIDDEN_QUOTES),
+    time: Date.now(),
+    hidden: true,
+    rare: true
+  });
+
+  saveState();
+
+  burstParticles('#ffd166', undefined, undefined, 30);
+  floatText('🌟 传说馈赠', '#ffd166');
+
+  renderAll();
+
+  boxIcon.textContent = '🎉';
+  boxIcon.className = 'box-icon rare';
+  boxTitle.textContent = '传说馈赠已收下';
+  boxSub.textContent = '星灵把你收进了星光深处';
+
+  boxBody.innerHTML = `
+    <div class="reward-title">你获得了</div>
+    <div class="reward-list">
+      ${rewards.map(r => `
+        <div class="reward-item legend">
+          <span>${r.emoji}</span>
+          ${r.name}${r.rare ? ' <em style="font-style:normal;color:#ffd166;font-size:11px;">· 传说</em>' : ''}
+        </div>
+      `).join('')}
+      <div class="reward-item mark">
+        <span>💫</span>
+        隐藏语录 · 已收录
+      </div>
+    </div>
+  `;
+
+  boxActions.innerHTML = '';
+  const ok = document.createElement('button');
+  ok.className = 'btn primary';
+  ok.textContent = '收下';
+  ok.addEventListener('click', () => hideModal('boxModal'));
+  boxActions.appendChild(ok);
+}
+
+/* 完成任务 */
+function completeTask(){
+  if(!pendingBox || pendingBox.type !== 'task') return;
+
+  const isWater = !!pendingBox.water;
+  const isRare = pendingBox.rarity === 'rare';
+  const isMulti = !!pendingBox.isMulti;
+  const rewards = [];
+
+  // 基础转化物
+  const normalPool = ITEMS.filter(i => !i.rare);
+  const item = pick(normalPool);
+  state.garden[item.name] = (state.garden[item.name] || 0) + 1;
+  rewards.push({ name: item.name, emoji: item.emoji, rare: false });
+
+  // 多选 / 稀有奖励翻倍
+  const extraCount = (isMulti ? 1 : 0) + (isRare ? 1 : 0);
+  for(let i = 0; i < extraCount; i++){
+    const extra = pick(normalPool);
+    state.garden[extra.name] = (state.garden[extra.name] || 0) + 1;
+    rewards.push({ name: extra.name, emoji: extra.emoji, rare: false });
+  }
+
+  // 喝水任务：水之印记 + 稀有转化物
+  let markGain = 0;
+  if(isWater){
+    state.water += 1;
+    state.marks += 1;
+    markGain = 1;
+
+    if(state.marks % 3 === 0){
+      const rare = pick(ITEMS.filter(i => i.rare));
+      state.garden[rare.name] = (state.garden[rare.name] || 0) + 1;
+      rewards.push({ name: rare.name, emoji: rare.emoji, rare: true });
+
+      const hq = HIDDEN_QUOTES[Math.floor(state.marks / 3 - 1) % HIDDEN_QUOTES.length];
+      state.collection.push({ type:'quote', text: hq, time: Date.now(), hidden: true });
+    }
+  }
+
+  // 稀有任务：额外给隐藏语录
+  if(isRare){
+    state.collection.push({
+      type: 'quote',
+      text: pick(HIDDEN_QUOTES),
+      time: Date.now(),
+      hidden: true,
+      rare: true
+    });
+  }
+
+  // 任务收录进收藏馆
+  state.collection.push({
+    type: 'task',
+    text: pendingBox.text,
+    time: Date.now(),
+    tag: pendingBox.tag,
+    water: isWater,
+    rare: isRare
+  });
+
+  saveState();
+
+  // 反馈
+  burstParticles(isWater ? '#7fe4ff' : '#b9a8ff');
+  floatText(isWater ? '💠 水之印记 +1' : '✨ 转化成功', isWater ? '#7fe4ff' : '#b9a8ff');
+  vibrate(35);
+
+  renderAll();
+
+  // 展示奖励
+  boxIcon.textContent = '🎉';
+  boxIcon.className = 'box-icon';
+  boxTitle.textContent = '转化成功';
+  boxSub.textContent = isWater
+    ? '水之印记已记录，星灵的光芒更清澈了'
+    : '星灵收下了你的行动';
+
+  boxBody.innerHTML = `
+    <div class="reward-title">你获得了</div>
+    <div class="reward-list">
+      ${rewards.map(r => `
+        <div class="reward-item">
+          <span>${r.emoji}</span>
+          ${r.name}${r.rare ? ' <em style="font-style:normal;color:#9fe8ff;font-size:11px;">· 稀有</em>' : ''}
+        </div>
+      `).join('')}
+      ${markGain ? `<div class="reward-item mark"><span>💠</span>水之印记 +1</div>` : ''}
+      ${isRare ? `<div class="reward-item mark"><span>💫</span>稀有任务 · 隐藏语录已收录</div>` : ''}
+    </div>
+  `;
+
+  boxActions.innerHTML = '';
+  const ok = document.createElement('button');
+  ok.className = 'btn primary';
+  ok.textContent = '收下';
+  ok.addEventListener('click', () => hideModal('boxModal'));
+  boxActions.appendChild(ok);
+}
+
+/* 稍后做：进入待办队列 */
+function deferTask(){
+  if(!pendingBox || pendingBox.type !== 'task') return;
+
+  state.todoQueue.push({
+    id: 'todo_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    text: pendingBox.text,
+    tag: pendingBox.tag,
+    water: pendingBox.water,
+    rarity: pendingBox.rarity,
+    isMulti: pendingBox.isMulti,
+    createdAt: Date.now()
+  });
+  saveState();
+  renderAll();
+
+  hideModal('boxModal');
+  floatText('📥 已放入待办盲盒', '#bfb4ff');
+}
+
+/* 从待办队列完成任务 */
+function completeTodoTask(id){
+  const idx = state.todoQueue.findIndex(t => t.id === id);
+  if(idx < 0) return;
+  const todo = state.todoQueue[idx];
+
+  pendingBox = {
+    type: 'task',
+    text: todo.text,
+    tag: todo.tag,
+    water: todo.water,
+    rarity: todo.rarity,
+    isMulti: todo.isMulti,
+    source: null,
+    sourceNames: '待办任务'
+  };
+
+  state.todoQueue.splice(idx, 1);
+  saveState();
+  renderAll();
+
+  // 直接进入结算
+  completeTask();
+}
+
+/* 删除待办任务 */
+function deleteTodoTask(id){
+  const idx = state.todoQueue.findIndex(t => t.id === id);
+  if(idx < 0) return;
+  state.todoQueue.splice(idx, 1);
+  saveState();
+  renderAll();
+}
+
+/* 收藏语录 */
+function collectQuote(btn){
+  if(!pendingBox) return;
+
+  const c = {
+    type: 'quote',
+    text: pendingBox.text,
+    time: Date.now(),
+    rare: pendingBox.rarity === 'rare'
+  };
+  state.collection.push(c);
+  saveState();
+  renderAll();
+
+  btn.textContent = '✓ 已收录进星光收藏馆';
+  btn.disabled = true;
+  setTimeout(() => hideModal('boxModal'), 850);
+}
+
+/* ============================================================
+   模块 08 · 喝水记录系统
+   ============================================================ */
+
+const waterModal       = document.getElementById('waterModal');
+const drinkGrid        = document.getElementById('drinkGrid');
+const mlRow            = document.getElementById('mlRow');
+const mlInput          = document.getElementById('mlInput');
+const timeInput        = document.getElementById('timeInput');
+const moodRow          = document.getElementById('moodRow');
+const moodSuggest      = document.getElementById('moodSuggest');
+const btnConfirmWater  = document.getElementById('btnConfirmWater');
+const switchContinuous = document.getElementById('switchContinuous');
+const waterModalTitle  = document.getElementById('waterModalTitle');
+const waterModalSub    = document.getElementById('waterModalSub');
+
+let selectedDrink = 'plain';
+let selectedMood  = null;
+let continuousMode = false;
+
+/* 当前记录模式：
+   'create' - 新建记录
+   'edit'   - 编辑记录（配合 editingWaterIndex） */
+let waterMode = 'create';
+let editingWaterIndex = -1;
+
+/* 构建喝水弹窗 */
+function buildWaterModal(){
+  // 饮品
+  drinkGrid.innerHTML = '';
+  DRINKS.forEach(d => {
+    const emo = EMOTIONS.find(e => e.key === d.suggestMood);
+    const b = document.createElement('button');
+    b.className = 'drink-btn' + (d.key === selectedDrink ? ' active' : '');
+    b.dataset.key = d.key;
+    b.type = 'button';
+    b.innerHTML = `
+      <span class="db-emoji">${d.emoji}</span>
+      <span>${d.name}</span>
+      <span class="db-emotion">${emo ? emo.emoji + emo.name : ''}</span>
+    `;
+    b.addEventListener('click', () => {
+      selectedDrink = d.key;
+      drinkGrid.querySelectorAll('.drink-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      // 自动推荐心情
+      suggestMoodByDrink(d);
+    });
+    drinkGrid.appendChild(b);
+  });
+
+  // 容量快捷
+  mlRow.innerHTML = '';
+  ML_PRESETS.forEach(ml => {
+    const b = document.createElement('button');
+    b.className = 'ml-btn';
+    b.type = 'button';
+    b.textContent = ml + 'ml';
+    b.addEventListener('click', () => {
+      mlInput.value = ml;
+      syncMlButtons();
+    });
+    mlRow.appendChild(b);
+  });
+  mlInput.addEventListener('input', syncMlButtons);
+
+  // 心情
+  moodRow.innerHTML = '';
+  EMOTIONS.forEach(e => {
+    const b = document.createElement('button');
+    b.className = 'mood-btn';
+    b.dataset.key = e.key;
+    b.type = 'button';
+    b.style.background = `radial-gradient(circle at 35% 28%, ${hexA(e.color,.5)}, rgba(255,255,255,.05) 76%)`;
+    b.style.borderColor = hexA(e.color,.55);
+    b.innerHTML = `<span class="mb-emoji">${e.emoji}</span><span>${e.name}</span>`;
+    b.addEventListener('click', () => toggleMood(e.key, b));
+    moodRow.appendChild(b);
+  });
+
+  // 连续饮水开关
+  switchContinuous.addEventListener('click', () => {
+    continuousMode = !continuousMode;
+    switchContinuous.classList.toggle('on', continuousMode);
+  });
+
+  // 默认时间
+  const now = new Date();
+  timeInput.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+}
+
+/* 根据液体推荐心情 */
+function suggestMoodByDrink(drink){
+  const emo = EMOTIONS.find(e => e.key === drink.suggestMood);
+  if(!emo) return;
+
+  if(!selectedMood){
+    moodSuggest.textContent = `建议心情：${emo.emoji} ${emo.name}（点击上方气泡可修改或取消）`;
+    moodSuggest.classList.add('highlight');
+  }else{
+    moodSuggest.textContent = `当前心情：${EMOTIONS.find(e => e.key === selectedMood).emoji} ${EMOTIONS.find(e => e.key === selectedMood).name}`;
+    moodSuggest.classList.remove('highlight');
+  }
+}
+
+/* 切换心情 */
+function toggleMood(key, btnEl){
+  if(selectedMood === key){
+    selectedMood = null;
+    btnEl.classList.remove('active');
+  }else{
+    selectedMood = key;
+    moodRow.querySelectorAll('.mood-btn').forEach(x => x.classList.remove('active'));
+    btnEl.classList.add('active');
+  }
+  updateMoodSuggest();
+}
+
+function updateMoodSuggest(){
+  if(selectedMood){
+    const emo = EMOTIONS.find(e => e.key === selectedMood);
+    moodSuggest.textContent = `当前心情：${emo.emoji} ${emo.name}`;
+    moodSuggest.classList.remove('highlight');
+  }else{
+    const drink = DRINKS.find(d => d.key === selectedDrink);
+    const emo = EMOTIONS.find(e => e.key === drink.suggestMood);
+    if(emo){
+      moodSuggest.textContent = `未选择心情 · 建议：${emo.emoji} ${emo.name}`;
+      moodSuggest.classList.add('highlight');
+    }else{
+      moodSuggest.textContent = '未选择心情 · 本次将只记录饮水';
+      moodSuggest.classList.remove('highlight');
+    }
+  }
+}
+
+function syncMlButtons(){
+  const v = parseInt(mlInput.value, 10);
+  mlRow.querySelectorAll('.ml-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.textContent, 10) === v);
+  });
+}
+
+/* 打开喝水弹窗（新建） */
+function openWaterModal(){
+  waterMode = 'create';
+  editingWaterIndex = -1;
+  selectedMood = null;
+  continuousMode = false;
+  switchContinuous.classList.remove('on');
+
+  waterModalTitle.textContent = '记录喝水';
+  waterModalSub.textContent = '喝水即正念 · 记录下此刻的液体与心情';
+  btnConfirmWater.textContent = '💧 确认记录';
+
+  mlInput.value = 200;
+  syncMlButtons();
+
+  const now = new Date();
+  timeInput.value = `${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+
+  moodRow.querySelectorAll('.mood-btn').forEach(x => x.classList.remove('active'));
+  drinkGrid.querySelectorAll('.drink-btn').forEach((x, i) => {
+    x.classList.toggle('active', DRINKS[i].key === selectedDrink);
+  });
+
+  updateMoodSuggest();
+  showModal('waterModal');
+}
+
+document.getElementById('btnOpenWater').addEventListener('click', openWaterModal);
+
+/* 确认记录喝水 */
+btnConfirmWater.addEventListener('click', () => {
+  const ml = parseInt(mlInput.value, 10);
+
+  // 校验
+  if(!ml || ml < 10 || ml > 2000){
+    mlInput.classList.add('error');
+    setTimeout(() => mlInput.classList.remove('error'), 1300);
+    floatText('请输入 10 - 2000 ml', '#ff9bb0');
+    mlInput.focus();
+    return;
+  }
+
+  // 解析时间
+  let recordTime = Date.now();
+  if(timeInput.value){
+    const [hh, mm] = timeInput.value.split(':').map(Number);
+    const d = new Date();
+    d.setHours(hh || 0, mm || 0, 0, 0);
+    // 不允许超过当前时间
+    recordTime = Math.min(d.getTime(), Date.now());
+    // 不允许早于今天 0 点
+    const todayStart = new Date();
+    todayStart.setHours(0,0,0,0);
+    if(recordTime < todayStart.getTime()) recordTime = todayStart.getTime();
+  }
+
+  const drink = DRINKS.find(d => d.key === selectedDrink) || DRINKS[0];
+  const entry = {
+    drink: drink.key,
+    ml,
+    mood: selectedMood,
+    t: recordTime,
+    continuous: continuousMode
+  };
+
+  // 编辑模式
+  if(waterMode === 'edit' && editingWaterIndex >= 0){
+    const old = state.waterLog[editingWaterIndex];
+    state.waterLog[editingWaterIndex] = Object.assign({}, old, entry);
+    saveState();
+    hideModal('waterModal');
+    renderAll();
+    floatText('✏️ 记录已更新', '#9fe8ff');
+    return;
+  }
+
+  // 新建模式
+  state.waterLog.push(entry);
+  if(state.waterLog.length > 1500){
+    state.waterLog = state.waterLog.slice(-1500);
+  }
+
+  /* ---- 奖励结算 ---- */
+  state.water += 1;
+
+  // 印记：连续饮水时按每 200ml 记 1 个，普通模式记 1 个
+  let markGain = 0;
+  if(continuousMode){
+    markGain = Math.max(1, Math.floor(ml / WATER_MARK_UNIT));
+  }else{
+    markGain = 1;
+  }
+  state.marks += markGain;
+
+  const rewards = [];
+  const normalPool = ITEMS.filter(i => !i.rare);
+  const item = pick(normalPool);
+  state.garden[item.name] = (state.garden[item.name] || 0) + 1;
+  rewards.push({ name: item.name, emoji: item.emoji, rare: false });
+
+  // 每 3 个印记解锁一次稀有
+  const marksBefore = state.marks - markGain;
+  if(Math.floor(state.marks / 3) > Math.floor(marksBefore / 3)){
+    const rare = pick(ITEMS.filter(i => i.rare));
+    state.garden[rare.name] = (state.garden[rare.name] || 0) + 1;
+    rewards.push({ name: rare.name, emoji: rare.emoji, rare: true });
+
+    const hq = HIDDEN_QUOTES[Math.floor(state.marks / 3 - 1) % HIDDEN_QUOTES.length];
+    state.collection.push({ type: 'quote', text: hq, time: Date.now(), hidden: true });
+  }
+
+  // 若同时记录了心情，同步投喂情绪
+  let moodInfo = null;
+  if(selectedMood){
+    const m = EMOTIONS.find(e => e.key === selectedMood);
+    if(m){
+      state.fed[m.key] = (state.fed[m.key] || 0) + 1;
+      state.log.push({ key: m.key, t: recordTime });
+      if(state.log.length > 800) state.log = state.log.slice(-800);
+      moodInfo = m;
+    }
+  }
+
+  // 今日首次达标
+  const tk = todayKey(Date.now());
+  const todayTotal = state.waterLog
+    .filter(w => todayKey(w.t) === tk)
+    .reduce((s, w) => s + w.ml, 0);
+
+  let goalReached = false;
+  if(todayTotal >= WATER_GOAL && !state.goalDays.includes(tk)){
+    state.goalDays.push(tk);
+    goalReached = true;
+
+    const rare = pick(ITEMS.filter(i => i.rare));
+    state.garden[rare.name] = (state.garden[rare.name] || 0) + 1;
+    rewards.push({ name: rare.name, emoji: rare.emoji, rare: true });
+
+    state.collection.push({
+      type: 'quote',
+      text: '【隐藏语录】今日饮水达标，星云为你亮起一整片星光。',
+      time: Date.now(),
+      hidden: true
+    });
+  }
+
+  saveState();
+
+  // 关闭弹窗 + 星灵动画
+  hideModal('waterModal');
+
+  spiritEl.classList.remove('drinking');
+  void spiritEl.offsetWidth;
+  spiritEl.classList.add('drinking');
+  setSpiritMoodWater();
+  setTimeout(() => spiritEl.classList.remove('drinking'), 950);
+
+  setTimeout(() => {
+    burstParticles('#7fe4ff', undefined, undefined, 24);
+    floatText(`💧 +${ml}ml`, '#7fe4ff');
+  }, 150);
+
+  vibrate([25, 40, 25]);
+
+  renderAll();
+
+  // 展示反馈
+  setTimeout(() => {
+    boxIcon.textContent = '💧';
+    boxIcon.className = 'box-icon';
+    boxTitle.textContent = '水之馈赠';
+    boxSub.textContent = `已记录「${drink.emoji} ${drink.name}」${ml}ml`;
+
+    boxBody.innerHTML = `
+      <div class="reward-list">
+        <div class="reward-item mark">
+          <span>🥤</span>
+          本次饮水 ${ml} ml
+        </div>
+        <div class="reward-item">
+          <span>📊</span>
+          今日累计 ${todayTotal} / ${WATER_GOAL} ml
+        </div>
+        ${moodInfo ? `
+        <div class="reward-item">
+          <span>${moodInfo.emoji}</span>
+          同时记录了心情「${moodInfo.name}」
+        </div>` : ''}
+        ${rewards.map(r => `
+        <div class="reward-item">
+          <span>${r.emoji}</span>
+          ${r.name}${r.rare ? ' <em style="font-style:normal;color:#9fe8ff;font-size:11px;">· 稀有</em>' : ''}
+        </div>`).join('')}
+        <div class="reward-item mark">
+          <span>💠</span>
+          水之印记 +${markGain}${continuousMode ? '（连续饮水）' : ''}
+        </div>
+        ${goalReached ? `
+        <div class="reward-item mark">
+          <span>🎉</span>
+          今日饮水目标达成！解锁隐藏语录
+        </div>` : ''}
+      </div>
+    `;
+
+    boxActions.innerHTML = '';
+    const ok = document.createElement('button');
+    ok.className = 'btn primary';
+    ok.textContent = '收下';
+    ok.addEventListener('click', () => hideModal('boxModal'));
+    boxActions.appendChild(ok);
+
+    showModal('boxModal');
+  }, 700);
+});
+
+/* 打开编辑喝水记录 */
+function openEditWaterModal(index){
+  const entry = state.waterLog[index];
+  if(!entry) return;
+
+  waterMode = 'edit';
+  editingWaterIndex = index;
+  selectedDrink = entry.drink;
+  selectedMood = entry.mood || null;
+  continuousMode = !!entry.continuous;
+  switchContinuous.classList.toggle('on', continuousMode);
+
+  waterModalTitle.textContent = '修改饮水记录';
+  waterModalSub.textContent = '调整容量、液体类型或删除这条记录';
+  btnConfirmWater.textContent = '💾 保存修改';
+
+  // 重建编辑弹窗的液体网格
+  const editDrinkGrid = document.getElementById('editDrinkGrid');
+  editDrinkGrid.innerHTML = '';
+  DRINKS.forEach(d => {
+    const b = document.createElement('button');
+    b.className = 'drink-btn' + (d.key === selectedDrink ? ' active' : '');
+    b.type = 'button';
+    b.innerHTML = `<span class="db-emoji">${d.emoji}</span><span>${d.name}</span>`;
+    b.addEventListener('click', () => {
+      selectedDrink = d.key;
+      editDrinkGrid.querySelectorAll('.drink-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+    editDrinkGrid.appendChild(b);
+  });
+
+  // 容量
+  const editMlRow = document.getElementById('editMlRow');
+  const editMlInput = document.getElementById('editMlInput');
+  editMlRow.innerHTML = '';
+  ML_PRESETS.forEach(ml => {
+    const b = document.createElement('button');
+    b.className = 'ml-btn' + (entry.ml === ml ? ' active' : '');
+    b.type = 'button';
+    b.textContent = ml + 'ml';
+    b.addEventListener('click', () => {
+      editMlInput.value = ml;
+      editMlRow.querySelectorAll('.ml-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    });
+    editMlRow.appendChild(b);
+  });
+  editMlInput.value = entry.ml;
+
+  showModal('editWaterModal');
+}
+
+/* 保存编辑 */
+document.getElementById('btnSaveWater').addEventListener('click', () => {
+  if(editingWaterIndex < 0) return;
+
+  const editMlInput = document.getElementById('editMlInput');
+  const ml = parseInt(editMlInput.value, 10);
+
+  if(!ml || ml < 10 || ml > 2000){
+    editMlInput.classList.add('error');
+    setTimeout(() => editMlInput.classList.remove('error'), 1300);
+    floatText('请输入 10 - 2000 ml', '#ff9bb0');
+    return;
+  }
+
+  const entry = state.waterLog[editingWaterIndex];
+  if(!entry) return;
+
+  entry.drink = selectedDrink;
+  entry.ml = ml;
+
+  saveState();
+  hideModal('editWaterModal');
+  renderAll();
+  floatText('✏️ 记录已更新', '#9fe8ff');
+});
+
+/* 删除记录 */
+document.getElementById('btnDeleteWater').addEventListener('click', () => {
+  if(editingWaterIndex < 0) return;
+
+  state.waterLog.splice(editingWaterIndex, 1);
+  saveState();
+  hideModal('editWaterModal');
+  renderAll();
+  floatText('🗑️ 记录已删除', '#ff9bb0');
+});
+
+/* ============================================================
+   模块 09 · 星灵进化
+   ============================================================ */
+
+function getCounts(){
+  let pos = 0, neg = 0;
+  EMOTIONS.forEach(e => {
+    const n = state.fed[e.key] || 0;
+    if(e.type === 'pos') pos += n; else neg += n;
+  });
+  return { pos, neg, total: pos + neg };
+}
+
+function getForm(){
+  const { pos, neg, total } = getCounts();
+
+  // 水之圣灵条件：记录喝水次数 >= 8 且 喝水次数 >= 情绪投喂总数 * 0.8
+  if(state.water >= 8 && state.water >= total * 0.8) return 'water';
+
+  if(total === 0) return 'star';
+  if(pos > neg * 1.2) return 'light';
+  if(neg > pos * 1.2) return 'mist';
+  return 'star';
+}
+
+let currentForm = 'star';
+
+function updateSpirit(){
+  const form = getForm();
+  const f = FORMS[form];
+
+  // 形态变化时触发进化动画
+  if(form !== currentForm){
+    const prevForm = currentForm;
+    currentForm = form;
+
+    if(prevForm !== 'star' || form !== 'star'){
+      triggerEvolution(prevForm, form);
+    }
+  }
+
+  spiritEl.classList.remove('form-star','form-light','form-mist','form-water');
+  spiritEl.classList.add('form-' + form);
+
+  spiritNameEl.innerHTML = `${f.emoji} ${f.name} <span class="sn-tag">${f.tag}</span>`;
+  spiritDescEl.textContent = f.desc;
+
+  updateSpiritMoodByState();
+}
+
+/* 进化提示 */
+const evoToast   = document.getElementById('evoToast');
+const evoEmoji   = document.getElementById('evoEmoji');
+const evoName    = document.getElementById('evoName');
+const evoDesc    = document.getElementById('evoDesc');
+const evoOk      = document.getElementById('evoOk');
+
+let evoTimer = null;
+
+function triggerEvolution(fromForm, toForm){
+  const f = FORMS[toForm];
+  const fromF = FORMS[fromForm];
+
+  // 记录进化历史
+  state.meta.formHistory.push({
+    from: fromForm,
+    to: toForm,
+    t: Date.now()
+  });
+  saveState();
+
+  // 星灵动画
+  spiritEl.classList.add('evolving');
+  setTimeout(() => spiritEl.classList.remove('evolving'), 1250);
+
+  // 粒子
+  burstParticles('#bfb4ff', undefined, undefined, 30);
+
+  // 提示卡片
+  evoEmoji.textContent = f.emoji;
+  evoName.textContent = f.name;
+  evoDesc.textContent = `星灵从「${fromF.name}」进化为「${f.name}」。${f.desc}`;
+  evoToast.classList.add('show');
+
+  if(evoTimer) clearTimeout(evoTimer);
+  evoTimer = setTimeout(() => {
+    evoToast.classList.remove('show');
+  }, 6500);
+}
+
+evoOk.addEventListener('click', () => {
+  evoToast.classList.remove('show');
+  if(evoTimer) clearTimeout(evoTimer);
+});
+
+/* 星灵档案渲染 */
+const evolutionBox = document.getElementById('evolutionBox');
+
+function renderEvolution(){
+  const { pos, neg, total } = getCounts();
+  const pct = total === 0 ? 50 : Math.round(pos / total * 100);
+  const form = getForm();
+  const f = FORMS[form];
+
+  const bars = EMOTIONS.map(e => {
+    const n = state.fed[e.key] || 0;
+    const w = total === 0 ? 0 : (n / total * 100);
+    return `
+      <div class="emo-bar-row">
+        <span class="eb-name">${e.emoji}${e.name}</span>
+        <span class="emo-bar-track">
+          <span class="emo-bar-fill" style="width:${w}%;background:${e.color}"></span>
+        </span>
+        <span class="eb-num">${n}</span>
+      </div>
+    `;
+  }).join('');
+
+  // 日历
+  const calendarHtml = renderCalendarHtml();
+
+  evolutionBox.innerHTML = `
+    <div class="evo-form">
+      <div class="evo-emoji">${f.emoji}</div>
+      <div>
+        <div class="evo-name">${f.name}</div>
+        <div class="evo-desc">${f.desc}</div>
+      </div>
+    </div>
+
+    <div class="ratio-block">
+      <div class="ratio-label">
+        <span>正向情绪 ${pos} 次</span>
+        <span>负向情绪 ${neg} 次</span>
+      </div>
+      <div class="ratio-bar"><div class="ratio-pos" style="width:${pct}%"></div></div>
+    </div>
+
+    <div class="mini-stats">
+      <div class="mini"><b>${state.water}</b><span>喝水次数</span></div>
+      <div class="mini"><b>${state.marks}</b><span>水之印记</span></div>
+      <div class="mini"><b>${total}</b><span>情绪投喂</span></div>
+    </div>
+
+    <div class="panel-title" style="font-size:12.5px;margin-bottom:10px;">情绪投喂分布</div>
+    <div class="emo-bars">${bars}</div>
+
+    <div class="calendar-block">
+      ${calendarHtml}
+    </div>
+
+    <div class="evo-hint">
+      <b>进化条件</b><br>
+      · 喂食更多喜悦 / 希望 / 平静 → <b>光之花灵</b><br>
+      · 喂食更多焦虑 / 悲伤 / 疲惫 → <b>雾隐守护者</b><br>
+      · 经常记录喝水 → <b>水之圣灵</b><br>
+      · 连续记录天数越多，稀有盲盒概率越高；连续 7 天必出传说盲盒
+    </div>
+  `;
+
+  bindCalendarEvents();
+}
+
+/* ============================================================
+   模块 12 · 情绪日历
+   ============================================================ */
+
+let calendarYear  = new Date().getFullYear();
+let calendarMonth = new Date().getMonth();
+let calendarSelectedDay = null;
+
+function renderCalendarHtml(){
+  const y = calendarYear;
+  const m = calendarMonth;
+  const firstDay = new Date(y, m, 1);
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const startWeekday = firstDay.getDay(); // 0 周日
+
+  // 按天聚合数据
+  const dayMap = {};
+  state.log.forEach(l => {
+    const k = todayKey(l.t);
+    if(!dayMap[k]) dayMap[k] = { pos:0, neg:0, water:0, ml:0, emotions:[] };
+    const emo = EMOTIONS.find(e => e.key === l.key);
+    if(emo){
+      if(emo.type === 'pos') dayMap[k].pos++;
+      else dayMap[k].neg++;
+      dayMap[k].emotions.push(emo.key);
+    }
+  });
+  state.waterLog.forEach(w => {
+    const k = todayKey(w.t);
+    if(!dayMap[k]) dayMap[k] = { pos:0, neg:0, water:0, ml:0, emotions:[] };
+    dayMap[k].water++;
+    dayMap[k].ml += w.ml;
+  });
+
+  const todayK = todayKey();
+
+  let cells = '';
+  for(let i = 0; i < startWeekday; i++){
+    cells += `<div class="cal-cell blank"></div>`;
+  }
+
+  for(let d = 1; d <= daysInMonth; d++){
+    const k = `${y}-${m+1}-${d}`;
+    const data = dayMap[k];
+    const isToday = k === todayK;
+    const hasData = !!data;
+    const isSel = calendarSelectedDay === k;
+
+    let bg = 'rgba(255,255,255,.025)';
+    let color = '';
+    if(hasData){
+      const pos = data.pos, neg = data.neg, ml = data.ml;
+      if(pos + neg > 0){
+        if(pos >= neg){
+          bg = `rgba(126,232,208,${clamp(0.18 + (pos + neg) * 0.04, 0.18, 0.6)})`;
+        }else{
+          bg = `rgba(179,157,219,${clamp(0.18 + (pos + neg) * 0.04, 0.18, 0.6)})`;
+        }
+      }
+      if(ml > 0){
+        // 喝水叠加青色
+        bg = `linear-gradient(135deg, ${bg}, rgba(79,195,247,${clamp(0.15 + ml/3000, 0.15, 0.55)}))`;
+      }
+      color = '#fff';
+    }
+
+    cells += `
+      <div class="cal-cell ${isToday ? 'today' : ''} ${hasData ? 'has-data' : ''} ${isSel ? 'sel' : ''}"
+           data-day="${k}"
+           style="background:${bg};${color ? 'color:' + color : ''}">
+        ${d}
+      </div>
+    `;
+  }
+
+  let detailHtml = `<b>点击日期查看当天记录</b>`;
+  if(calendarSelectedDay){
+    const data = dayMap[calendarSelectedDay];
+    const [yy, mm, dd] = calendarSelectedDay.split('-').map(Number);
+    if(!data){
+      detailHtml = `<b>${yy} 年 ${mm} 月 ${dd} 日</b><br>这一天还没有记录。`;
+    }else{
+      const emotionChips = data.emotions.length
+        ? data.emotions.map(k => {
+            const e = EMOTIONS.find(x => x.key === k);
+            return e ? `<span class="cd-chip">${e.emoji}${e.name}</span>` : '';
+          }).join('')
+        : '<span class="cd-chip">无情绪记录</span>';
+      detailHtml = `
+        <b>${yy} 年 ${mm} 月 ${dd} 日</b><br>
+        正向情绪 ${data.pos} 次 · 负向情绪 ${data.neg} 次<br>
+        饮水 ${data.water} 次 · 共 ${data.ml} ml
+        <div class="cd-row">${emotionChips}</div>
+      `;
+    }
+  }
+
+  return `
+    <div class="cal-head">
+      <div class="cal-title">${y} 年 ${m + 1} 月 · 情绪日历</div>
+      <div class="cal-nav">
+        <button type="button" id="calPrev" aria-label="上个月">‹</button>
+        <button type="button" id="calNext" aria-label="下个月">›</button>
+      </div>
+    </div>
+    <div class="cal-week">
+      <span>日</span><span>一</span><span>二</span>
+      <span>三</span><span>四</span><span>五</span><span>六</span>
+    </div>
+    <div class="cal-grid">${cells}</div>
+    <div class="cal-legend">
+      <span class="lg"><i style="background:rgba(126,232,208,.6);"></i>正向偏多</span>
+      <span class="lg"><i style="background:rgba(179,157,219,.6);"></i>负向偏多</span>
+      <span class="lg"><i style="background:rgba(79,195,247,.6);"></i>有饮水</span>
+    </div>
+    <div class="cal-detail">${detailHtml}</div>
+  `;
+}
+
+function bindCalendarEvents(){
+  const prevBtn = document.getElementById('calPrev');
+  const nextBtn = document.getElementById('calNext');
+
+  if(prevBtn){
+    prevBtn.addEventListener('click', () => {
+      calendarMonth--;
+      if(calendarMonth < 0){
+        calendarMonth = 11;
+        calendarYear--;
+      }
+      renderEvolution();
+    });
+  }
+
+  if(nextBtn){
+    nextBtn.addEventListener('click', () => {
+      calendarMonth++;
+      if(calendarMonth > 11){
+        calendarMonth = 0;
+        calendarYear++;
+      }
+      renderEvolution();
+    });
+  }
+
+  evolutionBox.querySelectorAll('.cal-cell:not(.blank)').forEach(cell => {
+    cell.addEventListener('click', () => {
+      const day = cell.dataset.day;
+      if(!day) return;
+      calendarSelectedDay = (calendarSelectedDay === day) ? null : day;
+      renderEvolution();
+    });
+  });
+}
+
+/* ============================================================
+   模块 10 · 花园系统
+   ============================================================ */
+
+const gardenWrap  = document.getElementById('gardenWrap');
+const todoQueueBox = document.getElementById('todoQueueBox');
+
+const GARDEN_COLS = 4;
+const GARDEN_MIN_CELLS = 16;
+
+function getGardenSlots(){
+  // 确保 gardenSlots 足够长
+  const totalItems = Object.keys(state.garden).reduce((s,k) => s + (state.garden[k] > 0 ? 1 : 0), 0);
+  const need = Math.max(GARDEN_MIN_CELLS, Math.ceil(totalItems / GARDEN_COLS) * GARDEN_COLS);
+  while(state.gardenSlots.length < need){
+    state.gardenSlots.push(null);
+  }
+  return state.gardenSlots;
+}
+
+/* 把 garden 字典同步到格子 */
+function syncGardenSlots(){
+  const slots = getGardenSlots();
+
+  // 收集所有需要放置的物品
+  const inventory = [];
+  Object.keys(state.garden).forEach(name => {
+    if(state.garden[name] > 0) inventory.push(name);
+  });
+
+  // 已存在的格子保持位置
+  const placed = new Set();
+  for(let i = 0; i < slots.length; i++){
+    if(slots[i] && inventory.includes(slots[i])){
+      placed.add(slots[i]);
+    }else{
+      slots[i] = null;
+    }
+  }
+
+  // 未放置的物品依次放入空位
+  let idx = 0;
+  for(const name of inventory){
+    if(placed.has(name)) continue;
+    while(idx < slots.length && slots[idx] !== null) idx++;
+    if(idx < slots.length){
+      slots[idx] = name;
+      placed.add(name);
+    }
+  }
+
+  // 清理多余格子（保留至少 16 格）
+  let lastFilled = slots.length - 1;
+  while(lastFilled >= GARDEN_MIN_CELLS && slots[lastFilled] === null) lastFilled--;
+  state.gardenSlots = slots.slice(0, Math.max(GARDEN_MIN_CELLS, lastFilled + 1));
+
+  // 补齐到 4 的倍数
+  while(state.gardenSlots.length % GARDEN_COLS !== 0){
+    state.gardenSlots.push(null);
+  }
+
+  saveState();
+}
+
+function renderGarden(){
+  syncGardenSlots();
+
+  const slots = state.gardenSlots;
+  const itemMap = {};
+  ITEMS.forEach(i => itemMap[i.name] = i);
+
+  let html = '';
+  slots.forEach((name, index) => {
+    if(name && state.garden[name] > 0){
+      const info = itemMap[name] || { emoji: '✨', rare: false };
+      const count = state.garden[name];
+      html += `
+        <div class="garden-cell" data-slot="${index}">
+          <div class="garden-item ${info.rare ? 'rare' : ''}"
+               draggable="true"
+               data-name="${escapeHtml(name)}"
+               data-slot="${index}">
+            <span class="gi-emoji">${info.emoji}</span>
+            <span class="gi-name">${escapeHtml(name)}</span>
+            <span class="gi-count">×${count}</span>
+          </div>
+        </div>
+      `;
+    }else{
+      html += `
+        <div class="garden-cell" data-slot="${index}">
+          <span class="gc-empty">＋</span>
+        </div>
+      `;
+    }
+  });
+
+  gardenWrap.innerHTML = html || `
+    <div class="empty-tip">
+      <span class="big">🌱</span>
+      花园还是一片空白<br>去完成盲盒任务、记录喝水，收集第一颗转化物吧
+    </div>
+  `;
+
+  bindGardenDrag();
+}
+
+/* 花园拖拽摆放 */
+let gardenDragSrc = null;
+
+function bindGardenDrag(){
+  const items = gardenWrap.querySelectorAll('.garden-item');
+  const cells = gardenWrap.querySelectorAll('.garden-cell');
+
+  items.forEach(item => {
+    item.addEventListener('dragstart', e => {
+      gardenDragSrc = {
+        name: item.dataset.name,
+        slot: parseInt(item.dataset.slot, 10)
+      };
+      item.classList.add('dragging');
+      try{
+        e.dataTransfer.setData('text/plain', item.dataset.name);
+        e.dataTransfer.effectAllowed = 'move';
+      }catch(err){ /* 忽略 */ }
+    });
+
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      gardenDragSrc = null;
+      cells.forEach(c => c.classList.remove('drag-over'));
+    });
+  });
+
+  cells.forEach(cell => {
+    cell.addEventListener('dragover', e => {
+      e.preventDefault();
+      if(gardenDragSrc) cell.classList.add('drag-over');
+    });
+
+    cell.addEventListener('dragleave', () => {
+      cell.classList.remove('drag-over');
+    });
+
+    cell.addEventListener('drop', e => {
+      e.preventDefault();
+      cell.classList.remove('drag-over');
+
+      if(!gardenDragSrc) return;
+      const targetSlot = parseInt(cell.dataset.slot, 10);
+      const srcSlot = gardenDragSrc.slot;
+      if(isNaN(targetSlot) || targetSlot === srcSlot) return;
+
+      // 交换
+      const slots = state.gardenSlots;
+      const tmp = slots[targetSlot];
+      slots[targetSlot] = slots[srcSlot];
+      slots[srcSlot] = tmp;
+
+      saveState();
+      renderGarden();
+    });
+  });
+}
+
+/* 待办队列 */
+function renderTodoQueue(){
+  if(state.todoQueue.length === 0){
+    todoQueueBox.innerHTML = '';
+    return;
+  }
+
+  const now = Date.now();
+  // 清理过期任务（仅标记，不删除，让用户手动删）
+  const items = state.todoQueue.slice().reverse().map(t => {
+    const expired = now - t.createdAt > TODO_EXPIRE_MS;
+    return `
+      <div class="todo-item ${expired ? 'expired' : ''}" data-id="${t.id}">
+        <span class="ti-tag">${TAG_NAMES[t.tag] || '任务'}</span>
+        <span class="ti-text">${escapeHtml(t.text)}</span>
+        <button class="ti-del" data-del="${t.id}" title="删除" type="button">✕</button>
+      </div>
+    `;
+  }).join('');
+
+  todoQueueBox.innerHTML = `
+    <div class="todo-queue">
+      <div class="todo-head">
+        <span class="th-title">📥 待办盲盒</span>
+        <span class="th-count">${state.todoQueue.length} 个</span>
+      </div>
+      <div class="todo-list">${items}</div>
+    </div>
+  `;
+
+  // 点击任务文本 → 完成
+  todoQueueBox.querySelectorAll('.todo-item').forEach(el => {
+    const id = el.dataset.id;
+    el.addEventListener('click', e => {
+      if(e.target.closest('[data-del]')) return;
+      completeTodoTask(id);
+    });
+  });
+
+  // 删除按钮
+  todoQueueBox.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      deleteTodoTask(btn.dataset.del);
+    });
+  });
+}
+
+/* ============================================================
+   模块 11 · 收藏馆
+   ============================================================ */
+
+const collectionList = document.getElementById('collectionList');
+
+function renderCollection(){
+  if(state.collection.length === 0){
+    collectionList.innerHTML = `
+      <div class="empty-tip">
+        <span class="big">📖</span>
+        收藏馆空空如也<br>打开盲盒，收藏第一句星光私语
+      </div>
+    `;
+    return;
+  }
+
+  const list = state.collection.map((c, index) => ({ c, index })).reverse();
+
+  collectionList.innerHTML = list.map(({ c, index }) => {
+    const isQuote = c.type === 'quote';
+    const isFav = state.favQuotes.includes(index);
+    const tag = isQuote
+      ? (c.hidden ? (c.rare ? '稀有隐藏语录' : '隐藏语录') : (c.rare ? '稀有语录' : '灵感碎片'))
+      : '治愈任务 · 已完成';
+
+    return `
+      <div class="collect-card ${isQuote ? 'quote' : 'task'} ${isFav ? 'faved' : ''}" data-index="${index}">
+        <span class="collect-tag">${tag}</span>
+        <div class="collect-text">${escapeHtml(c.text)}</div>
+        <div class="collect-time">${fmtTime(c.time)}</div>
+        <div class="collect-ops">
+          ${isQuote ? `
+            <button class="fav-btn ${isFav ? 'faved' : ''}" data-fav="${index}" title="${isFav ? '取消收藏' : '收藏心爱语录'}" type="button">${isFav ? '★' : '☆'}</button>
+            <button class="share-btn" data-share="${index}" title="生成分享卡片" type="button">↗</button>
+          ` : `
+            <button class="share-btn" data-share="${index}" title="生成分享卡片" type="button">↗</button>
+          `}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // 收藏按钮
+  collectionList.querySelectorAll('[data-fav]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.fav, 10);
+      toggleFavQuote(idx);
+    });
+  });
+
+  // 分享按钮
+  collectionList.querySelectorAll('[data-share]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.share, 10);
+      openShareCard(idx);
+    });
+  });
+}
+
+function toggleFavQuote(index){
+  const i = state.favQuotes.indexOf(index);
+  if(i >= 0){
+    state.favQuotes.splice(i, 1);
+  }else{
+    state.favQuotes.push(index);
+  }
+  saveState();
+  renderCollection();
+}
+
+/* ---------- 分享卡片 ---------- */
+
+const shareOverlay = document.getElementById('shareOverlay');
+const shareCanvas  = document.getElementById('shareCanvas');
+const shareCtx     = shareCanvas.getContext('2d');
+
+function openShareCard(index){
+  const c = state.collection[index];
+  if(!c) return;
+
+  drawShareCard(c);
+  shareOverlay.classList.add('show');
+}
+
+function drawShareCard(c){
+  const W = shareCanvas.width;
+  const H = shareCanvas.height;
+
+  // 背景渐变
+  const bg = shareCtx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#15103a');
+  bg.addColorStop(0.45, '#0c0a24');
+  bg.addColorStop(1, '#050510');
+  shareCtx.fillStyle = bg;
+  shareCtx.fillRect(0, 0, W, H);
+
+  // 星云光斑
+  const neb1 = shareCtx.createRadialGradient(W * 0.2, H * 0.2, 10, W * 0.2, H * 0.2, W * 0.7);
+  neb1.addColorStop(0, 'rgba(120,90,255,.35)');
+  neb1.addColorStop(1, 'rgba(120,90,255,0)');
+  shareCtx.fillStyle = neb1;
+  shareCtx.fillRect(0, 0, W, H);
+
+  const neb2 = shareCtx.createRadialGradient(W * 0.85, H * 0.75, 10, W * 0.85, H * 0.75, W * 0.6);
+  neb2.addColorStop(0, 'rgba(60,180,240,.30)');
+  neb2.addColorStop(1, 'rgba(60,180,240,0)');
+  shareCtx.fillStyle = neb2;
+  shareCtx.fillRect(0, 0, W, H);
+
+  // 星点
+  for(let i = 0; i < 140; i++){
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const r = Math.random() * 2 + 0.5;
+    const a = Math.random() * 0.65 + 0.15;
+    shareCtx.beginPath();
+    shareCtx.arc(x, y, r, 0, Math.PI * 2);
+    shareCtx.fillStyle = `rgba(255,255,255,${a})`;
+    shareCtx.fill();
+  }
+
+  // 星灵插画（简易）
+  const cx = W / 2;
+  const cy = H * 0.30;
+  const r = 96;
+
+  // 光晕
+  const aura = shareCtx.createRadialGradient(cx, cy, 10, cx, cy, r * 2.2);
+  aura.addColorStop(0, 'rgba(150,120,255,.55)');
+  aura.addColorStop(1, 'rgba(150,120,255,0)');
+  shareCtx.fillStyle = aura;
+  shareCtx.fillRect(0, 0, W, H);
+
+  // 星灵身体
+  const bodyGrad = shareCtx.createRadialGradient(cx - 30, cy - 40, 10, cx, cy, r);
+  bodyGrad.addColorStop(0, '#c8b8ff');
+  bodyGrad.addColorStop(0.55, '#6b5bd6');
+  bodyGrad.addColorStop(1, '#4a3a9e');
+  shareCtx.beginPath();
+  shareCtx.ellipse(cx, cy, r, r * 0.94, 0, 0, Math.PI * 2);
+  shareCtx.fillStyle = bodyGrad;
+  shareCtx.fill();
+
+  // 眼睛
+  shareCtx.fillStyle = '#191330';
+  shareCtx.beginPath();
+  shareCtx.arc(cx - 34, cy + 4, 10, 0, Math.PI * 2);
+  shareCtx.arc(cx + 34, cy + 4, 10, 0, Math.PI * 2);
+  shareCtx.fill();
+
+  // 眼睛高光
+  shareCtx.fillStyle = 'rgba(255,255,255,.95)';
+  shareCtx.beginPath();
+  shareCtx.arc(cx - 37, cy, 3.5, 0, Math.PI * 2);
+  shareCtx.arc(cx + 31, cy, 3.5, 0, Math.PI * 2);
+  shareCtx.fill();
+
+  // 腮红
+  shareCtx.fillStyle = 'rgba(255,140,180,.45)';
+  shareCtx.beginPath();
+  shareCtx.arc(cx - 62, cy + 32, 11, 0, Math.PI * 2);
+  shareCtx.arc(cx + 62, cy + 32, 11, 0, Math.PI * 2);
+  shareCtx.fill();
+
+  // 嘴巴
+  shareCtx.strokeStyle = '#191330';
+  shareCtx.lineWidth = 4;
+  shareCtx.beginPath();
+  shareCtx.arc(cx, cy + 42, 13, 0.15 * Math.PI, 0.85 * Math.PI);
+  shareCtx.stroke();
+
+  // 语录文本
+  const text = c.text;
+  shareCtx.fillStyle = '#e9e5ff';
+  shareCtx.font = '600 30px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+  shareCtx.textAlign = 'center';
+  shareCtx.textBaseline = 'top';
+
+  // 手动换行
+  const maxWidth = W - 120;
+  const lineHeight = 46;
+  const lines = wrapText(shareCtx, text, maxWidth);
+  const startY = H * 0.55;
+
+  lines.forEach((line, i) => {
+    shareCtx.fillText(line, W / 2, startY + i * lineHeight);
+  });
+
+  // 标签
+  shareCtx.font = '500 18px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+  shareCtx.fillStyle = 'rgba(160,200,255,.75)';
+  const tagText = c.type === 'quote'
+    ? (c.hidden ? '星光收藏馆 · 隐藏语录' : '星光收藏馆 · 灵感碎片')
+    : '星光收藏馆 · 治愈任务';
+  shareCtx.fillText(tagText, W / 2, H * 0.78);
+
+  // 底部品牌
+  shareCtx.font = '600 19px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+  shareCtx.fillStyle = 'rgba(200,190,255,.9)';
+  shareCtx.fillText('情绪盲盒 · 星灵日常', W / 2, H - 110);
+
+  shareCtx.font = '400 15px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+  shareCtx.fillStyle = 'rgba(150,140,200,.65)';
+  shareCtx.fillText('喝下的每一口水，都是星灵的光芒', W / 2, H - 76);
+
+  // 装饰线
+  shareCtx.strokeStyle = 'rgba(150,130,255,.35)';
+  shareCtx.lineWidth = 2;
+  shareCtx.beginPath();
+  shareCtx.moveTo(W / 2 - 60, H - 46);
+  shareCtx.lineTo(W / 2 + 60, H - 46);
+  shareCtx.stroke();
+}
+
+/* 文本换行工具 */
+function wrapText(ctx, text, maxWidth){
+  const lines = [];
+  let current = '';
+
+  for(let i = 0; i < text.length; i++){
+    const ch = text[i];
+    const test = current + ch;
+    const w = ctx.measureText(test).width;
+    if(w > maxWidth && current.length > 0){
+      lines.push(current);
+      current = ch;
+    }else{
+      current = test;
+    }
+  }
+  if(current) lines.push(current);
+  return lines;
+}
+
+document.getElementById('shareClose').addEventListener('click', () => {
+  shareOverlay.classList.remove('show');
+});
+
+document.getElementById('shareDownload').addEventListener('click', () => {
+  try{
+    const url = shareCanvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `情绪星灵分享卡片_${Date.now()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    floatText('⬇️ 图片已保存', '#9fe8ff');
+  }catch(err){
+    console.warn('保存图片失败', err);
+    floatText('保存失败，请长按图片保存', '#ff9bb0');
+  }
+});
+
+shareOverlay.addEventListener('click', e => {
+  if(e.target === shareOverlay) shareOverlay.classList.remove('show');
+});
+
+/* ============================================================
+   模块 13 · 数据面板
+   ============================================================ */
+
+const statFeedEl  = document.getElementById('statFeed');
+const statWaterTodayEl = document.getElementById('statWaterToday');
+const statWaterCard    = document.getElementById('statWaterCard');
+const statWaterFill    = document.getElementById('statWaterFill');
+const statWaterBar     = document.getElementById('statWaterBar');
+const statMarkEl  = document.getElementById('statMark');
+const statItemEl  = document.getElementById('statItem');
+
+function renderStats(){
+  const { total } = getCounts();
+  const tk = todayKey();
+  const todayTotal = state.waterLog
+    .filter(w => todayKey(w.t) === tk)
+    .reduce((s, w) => s + w.ml, 0);
+
+  statFeedEl.textContent = total;
+  statWaterTodayEl.textContent = todayTotal;
+  statMarkEl.textContent = state.marks;
+
+  let itemCount = 0;
+  Object.values(state.garden).forEach(v => itemCount += v);
+  statItemEl.textContent = itemCount;
+
+  // 顶栏今日饮水进度
+  const pct = clamp(todayTotal / WATER_GOAL * 100, 0, 100);
+  statWaterFill.style.width = pct + '%';
+  statWaterBar.style.width = pct + '%';
+  statWaterCard.classList.toggle('goal', todayTotal >= WATER_GOAL);
+
+  // 星灵上方的小标签
+  todayChipText.textContent = todayTotal >= WATER_GOAL
+    ? `今日已达标 ${todayTotal}ml`
+    : `今日 ${Math.round(pct)}% · ${todayTotal}ml`;
+  todayChip.classList.toggle('done', todayTotal >= WATER_GOAL);
+}
+
+/* ---------- 导出 JSON ---------- */
+document.getElementById('btnExportJson').addEventListener('click', () => {
+  const data = {
+    app: '情绪盲盒 · 星灵日常',
+    version: 'V1.2',
+    exportedAt: new Date().toISOString(),
+    state
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `情绪星灵数据_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  floatText('📤 数据已导出', '#a8d8ff');
+});
+
+/* ---------- 导入 JSON 备份 ---------- */
+const importFile = document.getElementById('importFile');
+
+document.getElementById('btnImportJson').addEventListener('click', () => {
+  importFile.value = '';
+  importFile.click();
+});
+
+importFile.addEventListener('change', () => {
+  const file = importFile.files && importFile.files[0];
+  if(!file) return;
+  if(file.size > 10 * 1024 * 1024){
+    floatText('备份文件超过 10MB', '#ff9bb0');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(String(reader.result || ''));
+      const source = parsed && parsed.state ? parsed.state : parsed;
+      if(!source || typeof source !== 'object' ||
+         !Array.isArray(source.log) || !Array.isArray(source.waterLog)){
+        throw new Error('invalid backup shape');
+      }
+
+      const hasExistingData = state.log.length || state.waterLog.length ||
+        state.collection.length || Object.keys(state.garden || {}).length;
+      if(hasExistingData && !window.confirm('导入会覆盖当前设备上的记录，是否继续？')){
+        return;
+      }
+
+      const imported = normalizeState(source);
+      if(!imported) throw new Error('invalid state');
+      state = imported;
+      saveState();
+      currentForm = getForm();
+      switchAmbient.classList.toggle('on', state.settings.ambient);
+      switchReminder.classList.toggle('on', state.settings.reminder);
+      applyAmbient();
+      renderAll();
+      floatText('📥 备份已导入', '#7ee8d0');
+    }catch(err){
+      console.warn('导入备份失败', err);
+      window.alert('无法导入：请选择由本应用导出的 JSON 备份文件。');
+    }finally{
+      importFile.value = '';
+    }
+  };
+  reader.onerror = () => {
+    importFile.value = '';
+    window.alert('读取文件失败，请重试。');
+  };
+  reader.readAsText(file, 'utf-8');
+});
+
+/* ---------- 导出喝水 CSV ---------- */
+document.getElementById('btnExportWaterCsv').addEventListener('click', () => {
+  const rows = [['时间', '液体', '容量(ml)', '心情', '连续饮水']];
+  state.waterLog.forEach(w => {
+    const d = DRINKS.find(x => x.key === w.drink);
+    const m = w.mood ? EMOTIONS.find(x => x.key === w.mood) : null;
+    rows.push([
+      fmtTime(w.t),
+      d ? d.name : w.drink,
+      w.ml,
+      m ? m.name : '',
+      w.continuous ? '是' : '否'
+    ]);
+  });
+  downloadCsv(rows, `喝水记录_${Date.now()}.csv`);
+  floatText('💧 喝水记录已导出', '#9fe8ff');
+});
+
+/* ---------- 导出情绪 CSV ---------- */
+document.getElementById('btnExportEmotionCsv').addEventListener('click', () => {
+  const rows = [['时间', '情绪', '类型']];
+  state.log.forEach(l => {
+    const e = EMOTIONS.find(x => x.key === l.key);
+    rows.push([
+      fmtTime(l.t),
+      e ? e.name : l.key,
+      e ? (e.type === 'pos' ? '正向' : '负向') : ''
+    ]);
+  });
+  downloadCsv(rows, `情绪记录_${Date.now()}.csv`);
+  floatText('😊 情绪记录已导出', '#a8d8ff');
+});
+
+/* CSV 下载工具（带 BOM，Excel 中文不乱码） */
+function downloadCsv(rows, filename){
+  const csv = rows.map(row =>
+    row.map(cell => {
+      const s = String(cell === undefined || cell === null ? '' : cell);
+      if(/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }).join(',')
+  ).join('\r\n');
+
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+/* ---------- 清空数据 ---------- */
+document.getElementById('btnReset').addEventListener('click', () => {
+  showModal('confirmModal');
+});
+
+document.getElementById('btnConfirmReset').addEventListener('click', () => {
+  localStorage.removeItem(STORAGE_KEY);
+  state = defaultState();
+  saveState();
+  hideModal('confirmModal');
+  currentForm = 'star';
+  renderAll();
+  floatText('🗑️ 数据已清空', '#ff9bb0');
+});
+
+/* ---------- 设置开关 ---------- */
+const switchAmbient   = document.getElementById('switchAmbient');
+const switchReminder  = document.getElementById('switchReminder');
+
+document.querySelectorAll('.switch').forEach(element => {
+  element.setAttribute('aria-checked', String(element.classList.contains('on')));
+  element.addEventListener('keydown', event => {
+    if(event.key === 'Enter' || event.key === ' '){
+      event.preventDefault();
+      element.click();
+    }
+  });
+  new MutationObserver(() => {
+    element.setAttribute('aria-checked', String(element.classList.contains('on')));
+  }).observe(element, { attributes:true, attributeFilter:['class'] });
+});
+
+function applyAmbient(){
+  document.body.classList.toggle('ambient', state.settings.ambient);
+  switchAmbient.classList.toggle('on', state.settings.ambient);
+  starSpeedMultiplier = state.settings.ambient ? 0.55 : 1;
+  buildStars();
+}
+
+switchAmbient.addEventListener('click', () => {
+  state.settings.ambient = !state.settings.ambient;
+  saveState();
+  applyAmbient();
+  floatText(state.settings.ambient ? '🌌 氛围模式已开启' : '🌌 氛围模式已关闭', '#bfb4ff');
+});
+
+switchReminder.addEventListener('click', () => {
+  state.settings.reminder = !state.settings.reminder;
+  saveState();
+  switchReminder.classList.toggle('on', state.settings.reminder);
+  floatText(state.settings.reminder ? '💧 喝水提醒已开启' : '💧 喝水提醒已关闭', '#9fe8ff');
+});
+
+/* 页面内喝水提醒（每 90 分钟） */
+const REMINDER_INTERVAL = 90 * 60 * 1000;
+let reminderTimer = null;
+
+function startReminderLoop(){
+  if(reminderTimer) clearInterval(reminderTimer);
+  reminderTimer = setInterval(() => {
+    if(!state.settings.reminder) return;
+    const now = Date.now();
+    const last = state.meta.lastReminderTime || 0;
+    if(now - last < REMINDER_INTERVAL) return;
+
+    const tk = todayKey();
+    const todayTotal = state.waterLog
+      .filter(w => todayKey(w.t) === tk)
+      .reduce((s, w) => s + w.ml, 0);
+    if(todayTotal >= WATER_GOAL) return;
+
+    state.meta.lastReminderTime = now;
+    saveState();
+
+    spiritBubble.textContent = '星灵想喝水了 💧';
+    spiritBubble.classList.add('show');
+    if(bubbleTimer) clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(() => {
+      spiritBubble.classList.remove('show');
+    }, 5000);
+
+    vibrate([15, 30, 15]);
+  }, 60 * 1000);
+}
+
+/* ---------- 隐私承诺展开 ---------- */
+const privacyHead  = document.getElementById('privacyHead');
+const privacyBody  = document.getElementById('privacyBody');
+const privacyArrow = document.getElementById('privacyArrow');
+
+privacyHead.addEventListener('click', () => {
+  const open = privacyBody.classList.toggle('open');
+  privacyArrow.classList.toggle('open', open);
+});
+
+/* ============================================================
+   模块 14 · 引导流程
+   ============================================================ */
+
+const guideOverlay   = document.getElementById('guideOverlay');
+const guideHighlight = document.getElementById('guideHighlight');
+const guideCard      = document.getElementById('guideCard');
+const guideStepEl    = document.getElementById('guideStep');
+const guideTitleEl   = document.getElementById('guideTitle');
+const guideTextEl    = document.getElementById('guideText');
+const guideDotsEl    = document.getElementById('guideDots');
+const guideSkip      = document.getElementById('guideSkip');
+const guideNext      = document.getElementById('guideNext');
+
+let guideStepIndex = 0;
+
+const GUIDE_STEPS = [
+  {
+    title: '把情绪投喂给星灵',
+    text: '按住下方任意一个情绪球，拖到星灵身上；也可以直接轻点情绪球投喂。每一次投喂都会掉落一个转化盲盒。',
+    target: () => document.getElementById('emotionDock'),
+    pad: 10
+  },
+  {
+    title: '记录你的每一次喝水',
+    text: '点击右下角蓝色的「喝水」圆钮，记录液体类型、容量，还可以顺手选一个心情。喝水与情绪会一起被记录。',
+    target: () => document.getElementById('btnOpenWater'),
+    pad: 14
+  },
+  {
+    title: '你的花园与收藏',
+    text: '使用底部导航打开花园、星光收藏馆、饮水面板、星灵档案与数据设置。转化物可以拖动摆放，语录可以生成分享卡片。',
+    target: () => window.matchMedia('(max-width: 920px)').matches
+      ? document.getElementById('mobileNav')
+      : document.querySelector('.side'),
+    pad: 6
+  }
+];
+
+function startGuide(){
+  guideStepIndex = 0;
+  guideOverlay.classList.add('show');
+  renderGuideStep();
+}
+
+function renderGuideStep(){
+  const step = GUIDE_STEPS[guideStepIndex];
+  if(!step){
+    endGuide();
+    return;
+  }
+
+  guideStepEl.textContent = `第 ${guideStepIndex + 1} / ${GUIDE_STEPS.length} 步`;
+  guideTitleEl.textContent = step.title;
+  guideTextEl.textContent = step.text;
+
+  // 进度点
+  const dots = guideDotsEl.querySelectorAll('i');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('on', i === guideStepIndex);
+  });
+
+  // 高亮目标
+  const target = step.target();
+  if(target){
+    const r = target.getBoundingClientRect();
+    const pad = step.pad || 8;
+    guideHighlight.style.left   = (r.left - pad) + 'px';
+    guideHighlight.style.top    = (r.top - pad) + 'px';
+    guideHighlight.style.width  = (r.width + pad * 2) + 'px';
+    guideHighlight.style.height = (r.height + pad * 2) + 'px';
+
+    // 卡片位置：目标在屏幕下半部分时放上方，否则放下方
+    const cardW = 340;
+    const cardH = 200;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    let cardLeft = clamp(r.left + r.width / 2 - cardW / 2, 16, vw - cardW - 16);
+    let cardTop;
+
+    if(r.top > vh / 2){
+      cardTop = r.top - cardH - 26;
+      if(cardTop < 16) cardTop = r.bottom + 26;
+    }else{
+      cardTop = r.bottom + 26;
+      if(cardTop + cardH > vh - 16) cardTop = r.top - cardH - 26;
+    }
+
+    guideCard.style.left = cardLeft + 'px';
+    guideCard.style.top  = clamp(cardTop, 16, vh - cardH - 16) + 'px';
+  }
+
+  guideNext.textContent = guideStepIndex === GUIDE_STEPS.length - 1 ? '开始使用' : '下一步';
+}
+
+guideNext.addEventListener('click', () => {
+  guideStepIndex++;
+  if(guideStepIndex >= GUIDE_STEPS.length){
+    endGuide();
+  }else{
+    renderGuideStep();
+  }
+});
+
+guideSkip.addEventListener('click', endGuide);
+
+function endGuide(){
+  guideOverlay.classList.remove('show');
+  try{
+    localStorage.setItem(GUIDE_KEY, '1');
+  }catch(e){ /* 忽略 */ }
+}
+
+/* ============================================================
+   模块 15 · 弹窗 / 标签页 / 全局事件
+   ============================================================ */
+
+function showModal(id){
+  const m = document.getElementById(id);
+  if(m) m.classList.add('show');
+}
+function hideModal(id){
+  const m = document.getElementById(id);
+  if(m) m.classList.remove('show');
+}
+
+document.querySelectorAll('[data-close]').forEach(btn => {
+  btn.addEventListener('click', () => hideModal(btn.dataset.close));
+});
+
+document.querySelectorAll('.modal').forEach(m => {
+  m.addEventListener('click', e => {
+    if(e.target === m) hideModal(m.id);
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    document.querySelectorAll('.modal.show').forEach(m => hideModal(m.id));
+    shareOverlay.classList.remove('show');
+    evoToast.classList.remove('show');
+    if(document.querySelector('.app.mobile-panel-open')){
+      showHomeView();
+    }
+  }
+});
+
+/* 标签页 / App 页面切换 */
+const appShell = document.querySelector('.app');
+const mobileNavEl = document.getElementById('mobileNav');
+const brandHome = document.getElementById('brandHome');
+const SIDE_TABS = ['garden', 'collection', 'water', 'spirit', 'data'];
+let mobilePanelOpen = false;
+
+function activateTab(tabName){
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.panel').forEach(p => {
+    p.classList.toggle('active', p.dataset.panel === tabName);
+  });
+  document.querySelectorAll('[data-mobile-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mobileTab === tabName);
+  });
+  document.querySelector('[data-mobile-home]')?.classList.toggle('active', !tabName);
+}
+
+function safeHistory(method, state, url){
+  try{
+    history[method](state, '', url);
+  }catch(e){ /* 本地文件环境可能不允许改写历史记录 */ }
+}
+
+function openMobilePanel(tabName, addHistory = true){
+  if(!SIDE_TABS.includes(tabName)) return;
+  const wasOpen = mobilePanelOpen;
+  mobilePanelOpen = true;
+  appShell.classList.add('mobile-panel-open');
+  activateTab(tabName);
+
+  const tabBody = document.querySelector('.tab-body');
+  if(tabBody) tabBody.scrollTop = 0;
+
+  const url = `#${tabName}`;
+  if(addHistory && !wasOpen){
+    safeHistory('pushState', {mobilePanel:tabName}, url);
+  }else{
+    safeHistory('replaceState', {mobilePanel:tabName}, url);
+  }
+}
+
+function showHomeView(addHistory = false){
+  mobilePanelOpen = false;
+  appShell.classList.remove('mobile-panel-open');
+  activateTab(window.matchMedia('(max-width: 920px)').matches ? null : 'garden');
+  const homeUrl = location.pathname + location.search;
+  if(addHistory){
+    safeHistory('pushState', {mobilePanel:null}, homeUrl);
+  }else{
+    safeHistory('replaceState', {mobilePanel:null}, homeUrl);
+  }
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => activateTab(tab.dataset.tab));
+});
+
+document.querySelectorAll('[data-mobile-tab]').forEach(btn => {
+  btn.addEventListener('click', () => openMobilePanel(btn.dataset.mobileTab));
+});
+
+document.querySelector('[data-mobile-home]')?.addEventListener('click', () => showHomeView());
+
+brandHome.addEventListener('click', () => showHomeView());
+brandHome.addEventListener('keydown', e => {
+  if(e.key === 'Enter' || e.key === ' '){
+    e.preventDefault();
+    showHomeView();
+  }
+});
+
+window.addEventListener('popstate', () => {
+  const tab = location.hash.slice(1);
+  if(SIDE_TABS.includes(tab)){
+    openMobilePanel(tab, false);
+  }else{
+    showHomeView();
+  }
+});
+
+/* 键盘可访问性：情绪球 Enter 投喂 */
+dockEl.addEventListener('keydown', e => {
+  if(e.key === 'Enter' || e.key === ' '){
+    const ball = e.target.closest('.emotion-ball');
+    if(ball){
+      e.preventDefault();
+      if(multiSelectMode){
+        toggleEmotionSelect(ball.dataset.key, ball);
+      }else{
+        feedEmotion(ball.dataset.key);
+      }
+    }
+  }
+});
+
+/* 全局：点击外部关闭饮水记录菜单 */
+document.addEventListener('click', e => {
+  document.querySelectorAll('.wl-menu.show').forEach(menu => {
+    if(!menu.contains(e.target) && !e.target.closest('.wl-menu-btn')){
+      menu.classList.remove('show');
+    }
+  });
+});
+
+/* ============================================================
+   模块 16 · 启动
+   ============================================================ */
+
+const waterPanelEl = document.getElementById('waterPanel');
+
+/* 饮水面板 */
+function renderWaterPanel(){
+  const tk = todayKey();
+  const todayLogs = state.waterLog.filter(w => todayKey(w.t) === tk);
+  const todayTotal = todayLogs.reduce((s, w) => s + w.ml, 0);
+  const pct = clamp(todayTotal / WATER_GOAL * 100, 0, 100);
+  const deg = pct * 3.6;
+
+  // 累计统计
+  const totalMl = state.waterLog.reduce((s, w) => s + w.ml, 0);
+  const totalTimes = state.waterLog.length;
+  const favMap = {};
+  state.waterLog.forEach(w => { favMap[w.drink] = (favMap[w.drink] || 0) + 1; });
+  let favKey = null, favNum = 0;
+  Object.keys(favMap).forEach(k => {
+    if(favMap[k] > favNum){ favNum = favMap[k]; favKey = k; }
+  });
+  const favDrink = DRINKS.find(d => d.key === favKey);
+
+  const listHtml = todayLogs.length === 0
+    ? `<div class="empty-tip" style="padding:26px 12px;">
+         <span class="big">💧</span>
+         今天还没有饮水记录<br>点击上方按钮或「喝水」圆钮记录一次
+       </div>`
+    : todayLogs.map((w, i) => {
+        const d = DRINKS.find(x => x.key === w.drink) || DRINKS[0];
+        const m = w.mood ? EMOTIONS.find(x => x.key === w.mood) : null;
+        const realIndex = state.waterLog.indexOf(w);
+        return `
+          <div class="wl-item" data-index="${realIndex}">
+            <span class="wl-emoji">${d.emoji}</span>
+            <div class="wl-main">
+              <div class="wl-name">
+                ${d.name}
+                ${m ? `· ${m.emoji}${m.name}` : ''}
+                ${w.continuous ? '<span class="wl-badge">连续饮水</span>' : ''}
+              </div>
+              <div class="wl-meta">${fmtHM(w.t)}</div>
+            </div>
+            <div class="wl-ml">${w.ml}ml</div>
+            <button class="wl-menu-btn" data-menu="${realIndex}" type="button" aria-label="更多操作">⋯</button>
+            <div class="wl-menu" data-menu-panel="${realIndex}">
+              <button type="button" data-edit="${realIndex}">✏️ 修改</button>
+              <button type="button" class="del" data-delete="${realIndex}">🗑️ 删除</button>
+            </div>
+          </div>
+        `;
+      }).reverse().join('');
+
+  waterPanelEl.innerHTML = `
+    <div class="water-ring-wrap">
+      <div class="water-ring" style="background:conic-gradient(from 180deg, #4fc3f7 0deg, #7b6bff ${deg}deg, rgba(255,255,255,.08) ${deg}deg);">
+        <div class="water-ring-hole">
+          <div class="wr-val">${todayTotal}</div>
+          <div class="wr-unit">/ ${WATER_GOAL} ml</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="water-actions">
+      <button class="btn primary" id="btnWaterPanelAdd" type="button">💧 记录喝水</button>
+    </div>
+
+    <div class="water-stats">
+      <div class="wstat"><b>${totalTimes}</b><span>累计次数</span></div>
+      <div class="wstat"><b>${totalMl}</b><span>累计 ml</span></div>
+      <div class="wstat"><b>${favDrink ? favDrink.emoji : '—'}</b><span>最常喝</span></div>
+    </div>
+
+    <div class="panel-title" style="font-size:12.5px;margin-bottom:10px;">今日记录</div>
+    <div class="water-log-list">${listHtml}</div>
+  `;
+
+  const addBtn = document.getElementById('btnWaterPanelAdd');
+  if(addBtn) addBtn.addEventListener('click', openWaterModal);
+
+  // 记录菜单
+  waterPanelEl.querySelectorAll('[data-menu]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = btn.dataset.menu;
+      const menu = waterPanelEl.querySelector(`[data-menu-panel="${idx}"]`);
+      const isOpen = menu.classList.contains('show');
+      waterPanelEl.querySelectorAll('.wl-menu.show').forEach(m => m.classList.remove('show'));
+      if(!isOpen) menu.classList.add('show');
+    });
+  });
+
+  // 修改
+  waterPanelEl.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.edit, 10);
+      openEditWaterModal(idx);
+    });
+  });
+
+  // 删除
+  waterPanelEl.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.delete, 10);
+      state.waterLog.splice(idx, 1);
+      saveState();
+      renderAll();
+      floatText('🗑️ 记录已删除', '#ff9bb0');
+    });
+  });
+}
+
+/* 总渲染 */
+function renderAll(){
+  renderStats();
+  updateBallCounts();
+  renderTodoQueue();
+  renderGarden();
+  renderCollection();
+  renderWaterPanel();
+  renderEvolution();
+  updateSpirit();
+}
+
+/* 启动 */
+function init(){
+  loadState();
+
+  // 同步开关状态
+  switchAmbient.classList.toggle('on', state.settings.ambient);
+  switchReminder.classList.toggle('on', state.settings.reminder);
+  applyAmbient();
+
+  // 初始化绘制
+  resizeCanvas();
+  drawStars();
+
+  // 渲染
+  renderDock();
+  buildWaterModal();
+  renderAll();
+
+  // App 深链与移动端初始页面
+  const requestedPanel = new URLSearchParams(location.search).get('panel') ||
+    location.hash.replace('#', '');
+  if(SIDE_TABS.includes(requestedPanel)){
+    if(window.matchMedia('(max-width: 920px)').matches){
+      openMobilePanel(requestedPanel, false);
+    }else{
+      activateTab(requestedPanel);
+    }
+  }else if(window.matchMedia('(max-width: 920px)').matches){
+    showHomeView();
+  }
+
+  // 启动提醒循环
+  startReminderLoop();
+
+  // 引导：首次进入
+  let guideDone = false;
+  try{
+    guideDone = localStorage.getItem(GUIDE_KEY) === '1';
+  }catch(e){ guideDone = false; }
+
+  if(!guideDone && state.log.length === 0 && state.waterLog.length === 0){
+    setTimeout(startGuide, 900);
+  }
+
+  // 欢迎浮字
+  if(state.log.length === 0 && state.waterLog.length === 0){
+    setTimeout(() => {
+      floatText('👋 拖拽情绪球投喂，或点击💧喝水', '#bfb4ff');
+    }, 600);
+  }
+
+  // 初始化形态记录
+  currentForm = getForm();
+
+  // 窗口变化
+  window.addEventListener('resize', debounce(() => {
+    resizeCanvas();
+    if(!window.matchMedia('(max-width: 920px)').matches &&
+       !document.querySelector('.tab.active')){
+      activateTab('garden');
+    }
+  }, 160));
+
+  // 定期检查待办过期 & 更新星灵状态
+  setInterval(() => {
+    updateSpiritMoodByState();
+    // 每隔 5 分钟重渲染一次待办队列（让过期状态生效）
+    renderTodoQueue();
+  }, 5 * 60 * 1000);
+}
+
+init();
+
+// 注册离线缓存；通过 HTTPS 或 localhost 打开时生效
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.warn('Service Worker 注册失败', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
